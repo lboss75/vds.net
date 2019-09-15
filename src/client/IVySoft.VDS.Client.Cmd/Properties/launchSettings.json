@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "IVySoft.VDS.Client.Cmd": {
+      "commandName": "Project",
+      "commandLineArgs": "channels -l vadim@iv-soft.ru -p 123qwe"
+    }
+  }
+}
