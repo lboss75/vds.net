@@ -1,5 +1,6 @@
 ﻿using CommandLine;
 using System;
+using System.Linq;
 
 namespace IVySoft.VDS.Client.Cmd
 {
@@ -7,15 +8,15 @@ namespace IVySoft.VDS.Client.Cmd
     {
         static int Main(string[] args)
         {
-            return Parser.Default.ParseArguments<ChannelsOptions, UploadOptions>(args)
+            return Parser.Default.ParseArguments<ChannelsOptions, SyncOptions>(args)
                 .MapResult(
                   (ChannelsOptions opts) => RunAddAndReturnExitCode(opts),
-                  (UploadOptions opts) => RunAddAndReturnExitCode(opts),
+                  (SyncOptions opts) => RunAddAndReturnExitCode(opts),
                   errs => 1);
 
         }
 
-        private static int RunAddAndReturnExitCode(UploadOptions opts)
+        private static int RunAddAndReturnExitCode(SyncOptions opts)
         {
             using (VdsApi api = new VdsApi(new VdsApiConfig
             {
@@ -23,12 +24,28 @@ namespace IVySoft.VDS.Client.Cmd
             }))
             {
                 api.Login(opts.Login, opts.Password).Wait();
-
-                for(int i = 0; i < opts.FilePath.Length; ++i)
+                var channel = api.GetChannels().Result
+                    .Where(x => x is Transactions.ChannelCreateTransaction)
+                    .Select(x => (Transactions.ChannelCreateTransaction)x)
+                    .SingleOrDefault(x => x.Id == opts.ChannelId);
+                if(channel == null)
                 {
-                    var file_path = opts.FilePath[i];
-                    var file_name = (null != opts.FileName && i < opts.FileName.Length) ? opts.FileName[i] : System.IO.Path.GetFileName(file_path);
+                    throw new Exception($"Channel {opts.ChannelId} not found");
+                }
 
+                if (opts.Method == SyncMethod.Both || opts.Method == SyncMethod.Download)
+                {
+                    foreach(var message in api.GetChannelMessages(channel).Result)
+                    {
+                        switch (message)
+                        {
+                            case Transactions.UserMessageTransaction msg:
+                                foreach (var f in msg.Files) {
+                                    Console.WriteLine($"{f.Name}|{f.MimeType}|{f.Size}");
+                                }
+                                break;
+                        }
+                    }
                 }
 
                 return 0;
@@ -48,7 +65,7 @@ namespace IVySoft.VDS.Client.Cmd
                 {
                     switch (message)
                     {
-                        case ChannelCreateTransaction msg:
+                        case Transactions.ChannelCreateTransaction msg:
                             Console.WriteLine($"{msg.Id}|{msg.Type}|{msg.Name}");
                             break;
                     }

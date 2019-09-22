@@ -2,7 +2,7 @@
   "profiles": {
     "IVySoft.VDS.Client.Cmd": {
       "commandName": "Project",
-      "commandLineArgs": "channels -l vadim@iv-soft.ru -p 123qwe"
+      "commandLineArgs": "sync -s iv-soft.ru:8050 -l vadim@iv-soft.ru -p 123qwe -i BMv87PwNd+jlM5067LwbeqC7daJ9A3NLHudarJYzdVs= -d C:\\Users\\v.malyshev\\source\\repos\\vds.net\\tmp -c Test"
     }
   }
 }

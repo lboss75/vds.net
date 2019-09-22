@@ -38,6 +38,18 @@ namespace IVySoft.VDS.Client
 
             return result + 0x80;
         }
+        public static Int64 get_int64(this Stream stream)
+        {
+            Int64 result = 0;
+            for (var i = 0; i < 8; ++i)
+            {
+                var value = stream.ReadByte();
+                result <<= 8;
+                result |= value;
+            }
+
+            return result;
+        }
 
         public static string get_string(this Stream stream)
         {

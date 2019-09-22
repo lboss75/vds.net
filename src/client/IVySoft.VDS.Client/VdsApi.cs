@@ -40,9 +40,19 @@ namespace IVySoft.VDS.Client
             return messages.Select(x => this.decrypt(x)).ToArray();
         }
 
+        public async Task<ChannelMessage[]> GetChannelMessages(Transactions.ChannelCreateTransaction channel)
+        {
+            var messages = await this.client_.call<CryptedChannelMessage[]>("get_channel_messages", channel.Id);
+            return messages.Select(x => this.decrypt(channel.ReadKey, x)).ToArray();
+        }
+
         private ChannelMessage decrypt(CryptedChannelMessage message)
         {
             var read_keys = this.read_keys_[message.read_id];
+            return decrypt(read_keys, message);
+        }
+        private ChannelMessage decrypt(KeyPair read_keys, CryptedChannelMessage message)
+        {
             var key_data = decrypt_by_private_key(read_keys.PrivateKey, Convert.FromBase64String(message.crypted_key));
 
 
@@ -62,9 +72,13 @@ namespace IVySoft.VDS.Client
                 switch (message_id)
                 {
                     //channel_create_transaction
-                    case ChannelCreateTransaction.MessageId:
+                    case Transactions.ChannelCreateTransaction.MessageId:
                         {
-                            return ChannelCreateTransaction.Deserialize(stream);
+                            return Transactions.ChannelCreateTransaction.Deserialize(stream);
+                        }
+                    case Transactions.UserMessageTransaction.MessageId:
+                        {
+                            return Transactions.UserMessageTransaction.Deserialize(stream);
                         }
 
                         ////channel_message
@@ -197,7 +211,7 @@ namespace IVySoft.VDS.Client
             }
         }
 
-        private RSACryptoServiceProvider parse_public_key(string public_key)
+        internal static RSACryptoServiceProvider parse_public_key(string public_key)
         {
             PemReader pemReader = new PemReader(new StringReader(public_key));
             RsaKeyParameters publicKeyParameters = (RsaKeyParameters)pemReader.ReadObject();
@@ -242,6 +256,25 @@ namespace IVySoft.VDS.Client
                 }
             }
 
+            return private_key_from_der(key_der);
+        }
+        internal static RSACryptoServiceProvider public_key_from_der(byte[] public_key)
+        {
+            var publicKeySequence = (DerSequence)Asn1Object.FromByteArray(public_key);
+
+            var modulus = (DerInteger)publicKeySequence[0];
+            var exponent = (DerInteger)publicKeySequence[1];
+
+            var keyParameters = new RsaKeyParameters(false, modulus.PositiveValue, exponent.PositiveValue);
+            var parameters = DotNetUtilities.ToRSAParameters(keyParameters);
+                        
+            RSACryptoServiceProvider cryptoServiceProvider = new RSACryptoServiceProvider();
+            cryptoServiceProvider.ImportParameters(parameters);
+            return cryptoServiceProvider;
+        }
+
+        internal static RSACryptoServiceProvider private_key_from_der(byte[] key_der)
+        {
             var privKeyObj = Asn1Object.FromByteArray(key_der);
             var privStruct = RsaPrivateKeyStructure.GetInstance((Asn1Sequence)privKeyObj);
 
@@ -370,13 +403,12 @@ namespace IVySoft.VDS.Client
             var zipped = deflate(data, size);
             var crypted_data = encrypt_by_aes_256_cbc(key_data2, iv_data, zipped);
             var result = await this.client_.call<BlockInfo>("upload", Convert.ToBase64String(crypted_data));
-            return new FileBlock
-            {
-                block_id = key_data,
-                block_key = key_data2,
-                replica_hashes = result.replicas.Select(x => Convert.FromBase64String(x)).ToArray(),
-                block_size = size
-            };
+            return new FileBlock(
+                key_data,
+                key_data2,
+                result.replicas.Select(x => Convert.FromBase64String(x)).ToArray(),
+                size
+            );
         }
 
         private byte[] deflate(byte[] data)

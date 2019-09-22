@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace IVySoft.VDS.Client
+namespace IVySoft.VDS.Client.Transactions
 {
     public class ChannelCreateTransaction : ChannelMessage
     {
@@ -45,6 +45,18 @@ namespace IVySoft.VDS.Client
             get
             {
                 return this.channel_type;
+            }
+        }
+
+        internal KeyPair ReadKey
+        {
+            get
+            {
+                return new KeyPair
+                {
+                    PublicKey = VdsApi.public_key_from_der(this.read_public_key),
+                    PrivateKey = VdsApi.private_key_from_der(this.read_private_key)
+                };
             }
         }
 
