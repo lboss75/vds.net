@@ -1,6 +1,8 @@
 ﻿using CommandLine;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 
 namespace IVySoft.VDS.Client.Cmd
 {
@@ -33,22 +35,82 @@ namespace IVySoft.VDS.Client.Cmd
                     throw new Exception($"Channel {opts.ChannelId} not found");
                 }
 
+                var exists_files = new Dictionary<string, List<Transactions.FileInfo>>();
+                foreach (var message in api.GetChannelMessages(channel).Result)
+                {
+                    switch (message)
+                    {
+                        case Transactions.UserMessageTransaction msg:
+                            foreach (var f in msg.Files)
+                            {
+                                List<Transactions.FileInfo> versions;
+                                if (!exists_files.TryGetValue(f.Name, out versions))
+                                {
+                                    versions = new List<Transactions.FileInfo>();
+                                    exists_files.Add(f.Name, versions);
+                                }
+                                versions.Add(f);
+                            }
+                            break;
+                    }
+                }
+
                 if (opts.Method == SyncMethod.Both || opts.Method == SyncMethod.Download)
                 {
-                    foreach(var message in api.GetChannelMessages(channel).Result)
+                    foreach (var f in exists_files)
                     {
-                        switch (message)
-                        {
-                            case Transactions.UserMessageTransaction msg:
-                                foreach (var f in msg.Files) {
-                                    Console.WriteLine($"{f.Name}|{f.MimeType}|{f.Size}");
-                                }
-                                break;
-                        }
+                        DownloadFile(api, System.IO.Path.Combine(opts.DestinationPath, f.Key), f.Value[0]);
                     }
                 }
 
                 return 0;
+            }
+        }
+
+        private static void DownloadFile(VdsApi api, string file_name, Transactions.FileInfo file_info)
+        {
+            if (System.IO.File.Exists(file_name))
+            {
+                var h = CalculateHash(file_name);
+                if (h.SequenceEqual(file_info.Id))
+                {
+                    return;
+                }
+            }
+            else
+            {
+                Console.WriteLine($"Downloading new file {file_name}");
+            }
+
+            var tmp = System.IO.Path.GetTempFileName();
+            try
+            {
+                using (var tmp_file = System.IO.File.Create(tmp))
+                {
+                    foreach (var file_block in file_info.Blocks)
+                    {
+                        var result = api.Dawnload(file_block).Result;
+                        tmp_file.Write(result, 0, result.Length);
+                    }
+                }
+            }
+            catch(Exception ex)
+            {
+                try { System.IO.File.Delete(tmp); } catch (Exception e) { }
+                throw;
+            }
+
+            System.IO.File.Copy(tmp, file_name, true);
+        }
+
+        private static byte[] CalculateHash(string file_name)
+        {
+            using(var f = System.IO.File.OpenRead(file_name))
+            {
+                using (var provider = SHA256.Create())
+                {
+                    return provider.ComputeHash(f);
+                }
             }
         }
 

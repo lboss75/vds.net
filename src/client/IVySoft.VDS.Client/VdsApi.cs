@@ -106,6 +106,26 @@ namespace IVySoft.VDS.Client
             }
         }
 
+        public async Task<byte[]> Dawnload(FileBlock file_block)
+        {
+            var result = await this.client_.call<string>("download", file_block.Replicas.Select(x => Convert.ToBase64String(x)).ToArray());
+            return decrypt_file_block(file_block, Convert.FromBase64String(result));
+        }
+
+        private byte[] decrypt_file_block(FileBlock file_block, byte[] data)
+        {
+            var iv_data = new byte[] { 0xa5, 0xbb, 0x9f, 0xce, 0xc2, 0xe4, 0x4b, 0x91, 0xa8, 0xc9, 0x59, 0x44, 0x62, 0x55, 0x90, 0x24 };
+            var zipped = decrypt_by_aes_256_cbc(file_block.BlockKey, iv_data, data);
+            var original_data = inflate(zipped);
+            var sig = sha256(original_data);
+            if (!file_block.BlockId.SequenceEqual(sig))
+            {
+                throw new Exception("Data is corrupted");
+            }
+
+            return original_data;
+        }
+
         private byte[] decrypt_by_aes_256_cbc(byte[] key, byte[] iv, byte[] data)
         {
             using (Aes aesAlg = Aes.Create())
@@ -409,6 +429,19 @@ namespace IVySoft.VDS.Client
                 result.replicas.Select(x => Convert.FromBase64String(x)).ToArray(),
                 size
             );
+        }
+
+        private byte[] inflate(byte[] data)
+        {
+            using (var ms = new MemoryStream())
+            {
+                using (var compressionStream = new DeflateStream(ms, CompressionMode.Decompress))
+                {
+                    compressionStream.Write(data, 0, data.Length);
+                    compressionStream.Close();
+                }
+                return ms.ToArray();
+            }
         }
 
         private byte[] deflate(byte[] data)

@@ -24,6 +24,7 @@ namespace IVySoft.VDS.Client.Transactions
         public string Name { get => name_; }
         public string MimeType { get => mime_type_; }
         public long Size { get => size_; }
+        public IEnumerable<FileBlock> Blocks { get => file_blocks_; }
 
         internal static FileInfo Deserialize(System.IO.Stream stream)
         {

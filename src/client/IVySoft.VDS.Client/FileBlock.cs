@@ -19,6 +19,10 @@ namespace IVySoft.VDS.Client
         private byte[][] replica_hashes_ { get; set; }
         private Int64 block_size_ { get; set; }
 
+        public byte[] BlockId { get => block_id_; }
+        public byte[] BlockKey { get => block_key_; }
+        public byte[][] Replicas { get => replica_hashes_; }
+
         internal static FileBlock Deserialize(Stream stream)
         {
             var block_id = stream.pop_data();
