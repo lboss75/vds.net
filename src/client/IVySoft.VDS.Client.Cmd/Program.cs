@@ -6,16 +6,31 @@ using System.Security.Cryptography;
 
 namespace IVySoft.VDS.Client.Cmd
 {
-    class Program
+    public class Program
     {
         static int Main(string[] args)
         {
-            return Parser.Default.ParseArguments<ChannelsOptions, SyncOptions>(args)
+            return Parser.Default.ParseArguments<ChannelsOptions, SyncOptions, AllocateStorageOptions>(args)
                 .MapResult(
                   (ChannelsOptions opts) => RunAddAndReturnExitCode(opts),
                   (SyncOptions opts) => RunAddAndReturnExitCode(opts),
+                  (AllocateStorageOptions opts) => RunAddAndReturnExitCode(opts),
                   errs => 1);
 
+        }
+
+        public static int RunAddAndReturnExitCode(AllocateStorageOptions opts)
+        {
+            using (VdsApi api = new VdsApi(new VdsApiConfig
+            {
+                ServiceUri = "ws://" + opts.Server + "/api/ws"
+            }))
+            {
+                api.Login(opts.Login, opts.Password).Wait();
+                api.AllocateStorage(opts.DestinationPath, opts.Length).Wait();
+            }
+
+            return 0;
         }
 
         private static int RunAddAndReturnExitCode(SyncOptions opts)
@@ -94,7 +109,7 @@ namespace IVySoft.VDS.Client.Cmd
                     }
                 }
             }
-            catch(Exception ex)
+            catch
             {
                 try { System.IO.File.Delete(tmp); } catch (Exception e) { }
                 throw;

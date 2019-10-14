@@ -2,7 +2,7 @@
 
 namespace IVySoft.VDS.Client.Cmd
 {
-    internal class BaseOptions
+    public class BaseOptions
     {
         [Option('l', "login", Required = true, HelpText = "User login")]
         public string Login { get; set; }

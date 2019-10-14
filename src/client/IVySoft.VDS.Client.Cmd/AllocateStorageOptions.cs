@@ -1,0 +1,14 @@
+﻿using CommandLine;
+
+namespace IVySoft.VDS.Client.Cmd
+{
+    [Verb("storage", HelpText = "Allocate storage.")]
+    public class AllocateStorageOptions : BaseOptions
+    {
+        [Option('r', "reserved", Required = true, HelpText = "Storage reserved size in megabytes")]
+        public long Length { get; set; }
+
+        [Option('d', "directory", Required = true, HelpText = "Path to directory")]
+        public string DestinationPath { get; set; }
+    }
+}

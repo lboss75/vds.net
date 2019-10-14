@@ -6,5 +6,7 @@ namespace IVySoft.VDS.Client
     {
         public int id { get; set; }
         public JToken result { get; set; }
+
+        public string error { get; set; }
     }
 }

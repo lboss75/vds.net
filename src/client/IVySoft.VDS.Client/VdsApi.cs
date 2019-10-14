@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Cryptography.KeyDerivation;
+using Newtonsoft.Json;
 using Org.BouncyCastle.Asn1;
 using Org.BouncyCastle.Asn1.Pkcs;
+using Org.BouncyCastle.Asn1.X509;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.OpenSsl;
 using Org.BouncyCastle.Security;
@@ -44,6 +46,25 @@ namespace IVySoft.VDS.Client
         {
             var messages = await this.client_.call<CryptedChannelMessage[]>("get_channel_messages", channel.Id);
             return messages.Select(x => this.decrypt(channel.ReadKey, x)).ToArray();
+        }
+
+        public async Task AllocateStorage(string folder, long size)
+        {
+            Directory.CreateDirectory(folder);
+
+            var body = JsonConvert.SerializeObject(new { vds = "0.1", name = this.public_key_id_ });
+            var sig = this.write_keys_[this.public_key_id_].PrivateKey.SignData(System.Text.Encoding.UTF8.GetBytes(body), new SHA256CryptoServiceProvider());
+            File.WriteAllText(
+                Path.Combine(folder, ".vds_storage.json"),
+                JsonConvert.SerializeObject(new
+                {
+                    vds = "0.1",
+                    name = this.public_key_id_,
+                    sign = Convert.ToBase64String(sig)
+                }));
+
+            var der = public_key_to_der(this.write_keys_[this.public_key_id_].PublicKey);
+            await this.client_.call<bool>("allocate_storage", Convert.ToBase64String(der), folder, size);
         }
 
         private ChannelMessage decrypt(CryptedChannelMessage message)
@@ -278,7 +299,23 @@ namespace IVySoft.VDS.Client
 
             return private_key_from_der(key_der);
         }
-        internal static RSACryptoServiceProvider public_key_from_der(byte[] public_key)
+
+        public static byte[] public_key_to_der(RSACryptoServiceProvider public_key)
+        {
+            var rsaParameters = DotNetUtilities.GetRsaPublicKey(public_key);
+            return new RsaPublicKeyStructure(rsaParameters.Modulus, rsaParameters.Exponent).ToAsn1Object().GetDerEncoded();
+
+            //return (new SubjectPublicKeyInfo(
+            //    new AlgorithmIdentifier(PkcsObjectIdentifiers.RsaEncryption, DerNull.Instance),
+            //    new RsaPublicKeyStructure(rsaParameters.Modulus, rsaParameters.Exponent).ToAsn1Object())).GetDerEncoded();
+        }
+
+        public static byte[] public_key_to_pem(RSACryptoServiceProvider public_key)
+        {
+            return Org.BouncyCastle.X509.SubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(DotNetUtilities.GetRsaPublicKey(public_key)).GetDerEncoded();
+        }
+
+        public static RSACryptoServiceProvider public_key_from_der(byte[] public_key)
         {
             var publicKeySequence = (DerSequence)Asn1Object.FromByteArray(public_key);
 

@@ -51,7 +51,17 @@ namespace IVySoft.VDS.Client
 
             if (null != source)
             {
-                ThreadPool.QueueUserWorkItem((x) => source.SetResult(result.result));
+                ThreadPool.QueueUserWorkItem((x) =>
+                {
+                    if (string.IsNullOrWhiteSpace(result.error))
+                    {
+                        source.SetResult(result.result);
+                    }
+                    else
+                    {
+                        source.SetException(new Exception(result.error));
+                    }
+                });
             }
             else
             {
