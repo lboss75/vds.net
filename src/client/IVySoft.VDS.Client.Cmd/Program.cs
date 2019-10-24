@@ -33,7 +33,7 @@ namespace IVySoft.VDS.Client.Cmd
             return 0;
         }
 
-        private static int RunAddAndReturnExitCode(SyncOptions opts)
+        public static int RunAddAndReturnExitCode(SyncOptions opts)
         {
             using (VdsApi api = new VdsApi(new VdsApiConfig
             {
@@ -50,7 +50,7 @@ namespace IVySoft.VDS.Client.Cmd
                     throw new Exception($"Channel {opts.ChannelId} not found");
                 }
 
-                var exists_files = new Dictionary<string, List<Transactions.FileInfo>>();
+                var storage_files = new Dictionary<string, List<Transactions.FileInfo>>();
                 foreach (var message in api.GetChannelMessages(channel).Result)
                 {
                     switch (message)
@@ -59,10 +59,10 @@ namespace IVySoft.VDS.Client.Cmd
                             foreach (var f in msg.Files)
                             {
                                 List<Transactions.FileInfo> versions;
-                                if (!exists_files.TryGetValue(f.Name, out versions))
+                                if (!storage_files.TryGetValue(f.Name, out versions))
                                 {
                                     versions = new List<Transactions.FileInfo>();
-                                    exists_files.Add(f.Name, versions);
+                                    storage_files.Add(f.Name, versions);
                                 }
                                 versions.Add(f);
                             }
@@ -72,13 +72,69 @@ namespace IVySoft.VDS.Client.Cmd
 
                 if (opts.Method == SyncMethod.Both || opts.Method == SyncMethod.Download)
                 {
+                    foreach (var f in storage_files)
+                    {
+                        DownloadFile(api, System.IO.Path.Combine(opts.DestinationPath, f.Key.Replace('/', System.IO.Path.DirectorySeparatorChar)), f.Value[0]);
+                    }
+                }
+
+                if (opts.Method == SyncMethod.Both || opts.Method == SyncMethod.Upload)
+                {
+                    var to_upload = new List<FileUploadStream>();
+
+                    var exists_files = CollectFiles(opts.DestinationPath);
                     foreach (var f in exists_files)
                     {
-                        DownloadFile(api, System.IO.Path.Combine(opts.DestinationPath, f.Key), f.Value[0]);
+                        if(IsNewFile(api, f, storage_files))
+                        {
+                            to_upload.Add(f);
+                        }
+                    }
+
+                    if (to_upload.Count > 0)
+                    {
+                        api.UploadFiles(opts.ChannelId, opts.Comment, to_upload.ToArray()).Wait();
                     }
                 }
 
                 return 0;
+            }
+        }
+
+        private static bool IsNewFile(VdsApi api, FileUploadStream f, Dictionary<string, List<Transactions.FileInfo>> storage_files)
+        {
+            List<Transactions.FileInfo> storageFiles;
+            storage_files.TryGetValue(f.Name, out storageFiles);
+
+
+            var h = CalculateHash(f.SystemPath);
+
+            if (storageFiles != null && storageFiles.Count > 0 && h.SequenceEqual(storageFiles[0].Id))
+            {
+                return false;
+            }
+
+            f.FileHash = h;
+            return true;
+        }
+
+        private static List<FileUploadStream> CollectFiles(string destinationPath)
+        {
+            var result = new List<FileUploadStream>();
+            CollectFiles(result, destinationPath, string.Empty);
+            return result;
+        }
+
+        private static void CollectFiles(List<FileUploadStream> result, string systemPath, string relativePath)
+        {
+            foreach(var f in System.IO.Directory.GetFiles(systemPath))
+            {
+                result.Add(new FileUploadStream { Name = (string.IsNullOrEmpty(relativePath) ? string.Empty : (relativePath + "/")) + System.IO.Path.GetFileName(f), SystemPath = f });
+            }
+
+            foreach (var f in System.IO.Directory.GetDirectories(systemPath))
+            {
+                CollectFiles(result, f, (string.IsNullOrEmpty(relativePath) ? string.Empty : (relativePath + "/")) + System.IO.Path.GetFileName(f));
             }
         }
 
@@ -111,7 +167,7 @@ namespace IVySoft.VDS.Client.Cmd
             }
             catch
             {
-                try { System.IO.File.Delete(tmp); } catch (Exception e) { }
+                try { System.IO.File.Delete(tmp); } catch { }
                 throw;
             }
 
@@ -128,8 +184,7 @@ namespace IVySoft.VDS.Client.Cmd
                 }
             }
         }
-
-        private static int RunAddAndReturnExitCode(ChannelsOptions opts)
+        public static ChannelMessage[] GetChannels(ChannelsOptions opts)
         {
             using (VdsApi api = new VdsApi(new VdsApiConfig
             {
@@ -138,18 +193,23 @@ namespace IVySoft.VDS.Client.Cmd
             {
                 api.Login(opts.Login, opts.Password).Wait();
 
-                foreach (var message in api.GetChannels().Result)
-                {
-                    switch (message)
-                    {
-                        case Transactions.ChannelCreateTransaction msg:
-                            Console.WriteLine($"{msg.Id}|{msg.Type}|{msg.Name}");
-                            break;
-                    }
-                }
-
-                return 0;
+                return api.GetChannels().Result;
             }
+        }
+
+        public static int RunAddAndReturnExitCode(ChannelsOptions opts)
+        {
+            foreach (var message in GetChannels(opts))
+            {
+                switch (message)
+                {
+                    case Transactions.ChannelCreateTransaction msg:
+                        Console.WriteLine($"{msg.Id}|{msg.Type}|{msg.Name}");
+                        break;
+                }
+            }
+
+            return 0;
         }
     }
 }

@@ -3,7 +3,7 @@
 namespace IVySoft.VDS.Client.Cmd
 {
     [Verb("sync", HelpText = "Sync files to the channel.")]
-    internal class SyncOptions : BaseOptions
+    public class SyncOptions : BaseOptions
     {
         [Option('i', "id", Required = true, HelpText = "Channel id")]
         public string ChannelId { get; set; }

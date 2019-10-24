@@ -400,31 +400,39 @@ namespace IVySoft.VDS.Client
                 var blocks = new List<FileBlock>();
                 using (var provider = SHA256.Create())
                 {
-                    int offset = 0;
                     long size = 0;
-                    for (; ; )
+                    using (var f = new FileStream(inputFile.SystemPath, FileMode.Open, FileAccess.Read, FileShare.Read))
                     {
-                        var readed = inputFile.Stream.Read(chunk, offset, chunkSize - offset);
-                        if (0 < readed)
+                        int offset = 0;
+                        for (; ; )
                         {
-                            provider.TransformBlock(chunk, offset, readed, null, 0);
-                            offset += readed;
-                            size += readed;
-
-                            if (offset == chunkSize)
+                            var readed = f.Read(chunk, offset, chunkSize - offset);
+                            if (0 < readed)
                             {
-                                blocks.Add(await save_block(chunk, chunkSize));
-                                offset = 0;
+                                provider.TransformBlock(chunk, offset, readed, null, 0);
+                                offset += readed;
+                                size += readed;
+
+                                if (offset == chunkSize)
+                                {
+                                    blocks.Add(await save_block(chunk, chunkSize));
+                                    offset = 0;
+                                }
+                                continue;
                             }
-                            continue;
+                            if (0 < offset)
+                            {
+                                blocks.Add(await save_block(chunk, offset));
+                            }
+                            break;
                         }
-                        if (0 < offset)
-                        {
-                            blocks.Add(await save_block(chunk, offset));
-                        }
-                        break;
+                        provider.TransformFinalBlock(chunk, 0, 0);
                     }
-                    provider.TransformFinalBlock(chunk, 0, 0);
+
+                    if (!inputFile.FileHash.SequenceEqual(provider.Hash))
+                    {
+                        throw new Exception($"File {inputFile.SystemPath} has been changed during upload process");
+                    }
 
                     files.Add(new UploadedFile
                     {

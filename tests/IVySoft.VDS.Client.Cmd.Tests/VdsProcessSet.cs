@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace IVySoft.VDS.Client.Cmd.Tests
 {
@@ -9,6 +10,14 @@ namespace IVySoft.VDS.Client.Cmd.Tests
         public VdsProcessSet(int count)
         {
             this.servers_ = new VdsProcess[count];
+        }
+
+        public VdsProcess this[int index]
+        {
+            get
+            {
+                return this.servers_[index];
+            }
         }
 
         public void start()
@@ -54,6 +63,34 @@ namespace IVySoft.VDS.Client.Cmd.Tests
                         throw;
                     }
                 }
+            }
+        }
+
+        internal ChannelMessage[] GetChannels(string login, string password, int server_index)
+        {
+            return Program.GetChannels(new ChannelsOptions
+            {
+                Login = login,
+                Password = password,
+                Server = $"localhost:{8050 + server_index}"
+            });
+        }
+
+        internal void sync_files(string login, string password, string channel_id, int server_index, string folder)
+        {
+            var code = Program.RunAddAndReturnExitCode(new SyncOptions
+            {
+                Login = login,
+                Password = password,
+                Server = $"localhost:{8050 + server_index}",
+                DestinationPath = folder,
+                Method = SyncMethod.Both,
+                ChannelId = channel_id
+            });
+
+            if (0 != code)
+            {
+                throw new Exception($"Sync files {folder} failed with code {code}");
             }
         }
 

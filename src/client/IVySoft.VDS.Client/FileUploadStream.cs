@@ -5,6 +5,7 @@ namespace IVySoft.VDS.Client
     public class FileUploadStream
     {
         public string Name { get; set; }
-        public Stream Stream { get; set; }
+        public string SystemPath { get; set; }
+        public byte[] FileHash { get; set; }
     }
 }

@@ -13,9 +13,9 @@ namespace IVySoft.VDS.Client.Cmd.Tests
 
         public VdsProcess(int index)
         {
-            this.server_root_ = Path.Combine(RootFolder, "servers", index.ToString());
+            this.server_root_ = Path.Combine(RootFolder, index.ToString());
             this.process_ = Process.Start(
-                Path.Combine(RootFolder, "vds_web_server"),
+                Path.Combine(Environment.CurrentDirectory, "vds_web_server"),
                 $"server start --root-folder {this.server_root_} -ll trace -lm * -dev -P {8050 + index}");
 
         }
@@ -23,7 +23,7 @@ namespace IVySoft.VDS.Client.Cmd.Tests
         {
             get
             {
-                return Directory.GetCurrentDirectory();
+                return Path.Combine(Environment.CurrentDirectory, "servers");
             }
         }
 
@@ -38,8 +38,8 @@ namespace IVySoft.VDS.Client.Cmd.Tests
         public static int InitRoot(string login, string password)
         {
             using (var process = Process.Start(
-                Path.Combine(RootFolder, "vds_background"),
-                $"server root -l {login} -p {password} --root-folder {Path.Combine(RootFolder, "servers", "0")} -ll trace -lm * -dev"))
+                Path.Combine(Environment.CurrentDirectory, "vds_background"),
+                $"server root -l {login} -p {password} --root-folder {Path.Combine(RootFolder, "0")} -ll trace -lm * -dev"))
             {
                 process.WaitForExit();
                 return process.ExitCode;
