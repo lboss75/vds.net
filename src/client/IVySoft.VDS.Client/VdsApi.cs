@@ -8,7 +8,6 @@ using Org.BouncyCastle.OpenSsl;
 using Org.BouncyCastle.Security;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Security.Cryptography;
@@ -50,12 +49,12 @@ namespace IVySoft.VDS.Client
 
         public async Task AllocateStorage(string folder, long size)
         {
-            Directory.CreateDirectory(folder);
+            System.IO.Directory.CreateDirectory(folder);
 
             var body = JsonConvert.SerializeObject(new { vds = "0.1", name = this.public_key_id_ });
             var sig = this.write_keys_[this.public_key_id_].PrivateKey.SignData(System.Text.Encoding.UTF8.GetBytes(body), new SHA256CryptoServiceProvider());
-            File.WriteAllText(
-                Path.Combine(folder, ".vds_storage.json"),
+            System.IO.File.WriteAllText(
+                System.IO.Path.Combine(folder, ".vds_storage.json"),
                 JsonConvert.SerializeObject(new
                 {
                     vds = "0.1",
@@ -79,7 +78,7 @@ namespace IVySoft.VDS.Client
 
             byte[] key;
             byte[] iv; ;
-            using (var stream = new MemoryStream(key_data))
+            using (var stream = new System.IO.MemoryStream(key_data))
             {
                 key = stream.pop_data();
                 iv = stream.pop_data();
@@ -87,7 +86,7 @@ namespace IVySoft.VDS.Client
 
             var data = decrypt_by_aes_256_cbc(key, iv, Convert.FromBase64String(message.crypted_data));
 
-            using (var stream = new MemoryStream(data))
+            using (var stream = new System.IO.MemoryStream(data))
             {
                 var message_id = stream.ReadByte();
                 switch (message_id)
@@ -155,11 +154,11 @@ namespace IVySoft.VDS.Client
                 aesAlg.IV = iv;
 
                 ICryptoTransform decryptor = aesAlg.CreateDecryptor(aesAlg.Key, aesAlg.IV);
-                using (MemoryStream msDecrypt = new MemoryStream(data))
+                using (var msDecrypt = new System.IO.MemoryStream(data))
                 {
                     using (CryptoStream csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read))
                     {
-                        using (MemoryStream srDecrypt = new MemoryStream())
+                        using (var srDecrypt = new System.IO.MemoryStream())
                         {
                             csDecrypt.CopyTo(srDecrypt);
                             return srDecrypt.ToArray();
@@ -177,11 +176,11 @@ namespace IVySoft.VDS.Client
                 aesAlg.IV = iv;
 
                 ICryptoTransform encryptor = aesAlg.CreateEncryptor(aesAlg.Key, aesAlg.IV);
-                using (MemoryStream msEncrypt = new MemoryStream())
+                using (var msEncrypt = new System.IO.MemoryStream())
                 {
                     using (CryptoStream csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write))
                     {
-                        using (MemoryStream srEncrypt = new MemoryStream(data))
+                        using (var srEncrypt = new System.IO.MemoryStream(data))
                         {
                             srEncrypt.CopyTo(csEncrypt);
                         }
@@ -238,7 +237,7 @@ namespace IVySoft.VDS.Client
             byte[] n = public_key.ExportParameters(false).Modulus;
             byte[] e = public_key.ExportParameters(false).Exponent;
 
-            using (MemoryStream ms = new MemoryStream())
+            using (var ms = new System.IO.MemoryStream())
             {
                 ms.Write(ToBytes(sshrsa_bytes.Length), 0, 4);
                 ms.Write(sshrsa_bytes, 0, sshrsa_bytes.Length);
@@ -254,7 +253,7 @@ namespace IVySoft.VDS.Client
 
         internal static RSACryptoServiceProvider parse_public_key(string public_key)
         {
-            PemReader pemReader = new PemReader(new StringReader(public_key));
+            PemReader pemReader = new PemReader(new System.IO.StringReader(public_key));
             RsaKeyParameters publicKeyParameters = (RsaKeyParameters)pemReader.ReadObject();
             RSAParameters rsaParameters = DotNetUtilities.ToRSAParameters(publicKeyParameters);
 
@@ -284,11 +283,11 @@ namespace IVySoft.VDS.Client
                 aesAlg.IV = new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
                 ICryptoTransform decryptor = aesAlg.CreateDecryptor(aesAlg.Key, aesAlg.IV);
-                using (MemoryStream msDecrypt = new MemoryStream(private_key))
+                using (var msDecrypt = new System.IO.MemoryStream(private_key))
                 {
                     using (CryptoStream csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read))
                     {
-                        using (MemoryStream srDecrypt = new MemoryStream())
+                        using (var srDecrypt = new System.IO.MemoryStream())
                         {
                             csDecrypt.CopyTo(srDecrypt);
                             key_der = srDecrypt.ToArray();
@@ -390,18 +389,18 @@ namespace IVySoft.VDS.Client
             }
         }
 
-        public async Task<ChannelMessage> UploadFiles(string channel_id, string message, FileUploadStream[] inputFiles)
+        public async Task<string> UploadFiles(Transactions.ChannelCreateTransaction channel_data, string message, FileUploadStream[] inputFiles)
         {
             var chunkSize = 67108864;
             var chunk = new byte[chunkSize];
-            var files = new List<UploadedFile>();
+            var files = new List<Transactions.FileInfo>();
             foreach (var inputFile in inputFiles)
             {
                 var blocks = new List<FileBlock>();
                 using (var provider = SHA256.Create())
                 {
                     long size = 0;
-                    using (var f = new FileStream(inputFile.SystemPath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                    using (var f = new System.IO.FileStream(inputFile.SystemPath, System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.Read))
                     {
                         int offset = 0;
                         for (; ; )
@@ -434,29 +433,68 @@ namespace IVySoft.VDS.Client
                         throw new Exception($"File {inputFile.SystemPath} has been changed during upload process");
                     }
 
-                    files.Add(new UploadedFile
-                    {
-                        file_name = inputFile.Name,
-                        mime_type = "application/octet-stream",
-                        file_size = size,
-                        file_id = provider.Hash,
-                        file_blocks = blocks.ToArray()
-                    });
+                    files.Add(new Transactions.FileInfo(
+                        inputFile.Name,
+                        "application/octet-stream",
+                        size,
+                        provider.Hash,
+                        blocks.ToArray()
+                    ));
                 }
             }
-            return await this.client_.call<ChannelMessage>(
+            return await this.client_.call<string>(
                 "broadcast",
-                Convert.ToBase64String(channel_encrypt(channel_id, 
-                    new ChannelMessageTransaction
-                    {
-                        message = string.IsNullOrWhiteSpace(message) ? "{\"$type\":\"SimpleMessage\"}" : message,
-                        files = files.ToArray()
-                    }.Serialize())));
+                Convert.ToBase64String(channel_encrypt(channel_data, 
+                    new Transactions.UserMessageTransaction(
+                        string.IsNullOrWhiteSpace(message) ? "{\"$type\":\"SimpleMessage\"}" : message,
+                        files.ToArray()
+                    ).Serialize())));
         }
 
-        private byte[] channel_encrypt(string channel_id, byte[] data)
+        private byte[] channel_encrypt(Transactions.ChannelCreateTransaction channel_data, byte[] data)
         {
-            throw new NotImplementedException();
+            var write_key = channel_data.WriteKey;
+
+            if (null == write_key)
+            {
+                throw new Exception("Channel is read only");
+            }
+
+            SecureRandom random = new SecureRandom();
+
+            var key = new byte[32];
+            random.NextBytes(key);
+
+            var iv = new byte[16];
+            random.NextBytes(iv);
+
+            var crypted_data = encrypt_by_aes_256_cbc(key, iv, data);
+
+            var read_key = channel_data.ReadKey;
+
+            byte[] crypted_key;
+            using (var ms = new System.IO.MemoryStream())
+            {
+                ms.push_data(key);
+                ms.push_data(iv);
+
+                crypted_key = read_key.PublicKey.Encrypt(ms.ToArray(), false);
+            }
+
+            using (var ms = new System.IO.MemoryStream())
+            { 
+                ms.WriteByte(99);
+                ms.push_data(Convert.FromBase64String(channel_data.Id));
+                ms.push_data(public_key_fingerprint(read_key.PublicKey));
+                ms.push_data(public_key_fingerprint(write_key.PublicKey));
+                ms.push_data(crypted_key);
+                ms.push_data(crypted_data);
+
+                var signature = write_key.PrivateKey.SignData(ms.ToArray(), new SHA256CryptoServiceProvider());
+                ms.push_data(signature);
+
+                return ms.ToArray();
+            }
         }
 
         private async Task<FileBlock> save_block(byte[] data, int size)
@@ -478,20 +516,22 @@ namespace IVySoft.VDS.Client
 
         private byte[] inflate(byte[] data)
         {
-            using (var ms = new MemoryStream())
+            using (var ms = new System.IO.MemoryStream(data))
             {
                 using (var compressionStream = new DeflateStream(ms, CompressionMode.Decompress))
                 {
-                    compressionStream.Write(data, 0, data.Length);
-                    compressionStream.Close();
+                    using (var result = new System.IO.MemoryStream())
+                    {
+                        compressionStream.CopyTo(result);
+                        return result.ToArray();
+                    }
                 }
-                return ms.ToArray();
             }
         }
 
         private byte[] deflate(byte[] data)
         {
-            using (var ms = new MemoryStream())
+            using (var ms = new System.IO.MemoryStream())
             {
                 using (var compressionStream = new DeflateStream(ms, CompressionMode.Compress))
                 {
@@ -504,7 +544,7 @@ namespace IVySoft.VDS.Client
 
         private byte[] deflate(byte[] data, int size)
         {
-            using (var ms = new MemoryStream())
+            using (var ms = new System.IO.MemoryStream())
             {
                 using (var compressionStream = new DeflateStream(ms, CompressionMode.Compress))
                 {

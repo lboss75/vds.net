@@ -31,5 +31,22 @@ namespace IVySoft.VDS.Client.Transactions
 
             return new UserMessageTransaction(message, files.ToArray());
         }
+
+        internal byte[] Serialize()
+        {
+            using(var ms = new System.IO.MemoryStream())
+            {
+                ms.WriteByte(MessageId);
+
+                ms.push_string(this.message_);
+                ms.write_number(this.files_.Length);
+                foreach(var f in this.files_)
+                {
+                    f.Serialize(ms);
+                }
+
+                return ms.ToArray();
+            }
+        }
     }
 }

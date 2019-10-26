@@ -60,6 +60,23 @@ namespace IVySoft.VDS.Client.Transactions
             }
         }
 
+        internal KeyPair WriteKey
+        {
+            get
+            {
+                if(null == this.write_private_key || 0 == this.write_private_key.Length)
+                {
+                    return null;
+                }
+
+                return new KeyPair
+                {
+                    PublicKey = VdsApi.public_key_from_der(this.write_public_key),
+                    PrivateKey = VdsApi.private_key_from_der(this.write_private_key)
+                };
+            }
+        }
+
 
         public string Name
         {

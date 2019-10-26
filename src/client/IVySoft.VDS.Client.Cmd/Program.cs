@@ -93,7 +93,7 @@ namespace IVySoft.VDS.Client.Cmd
 
                     if (to_upload.Count > 0)
                     {
-                        api.UploadFiles(opts.ChannelId, opts.Comment, to_upload.ToArray()).Wait();
+                        api.UploadFiles(channel, opts.Comment, to_upload.ToArray()).Wait();
                     }
                 }
 

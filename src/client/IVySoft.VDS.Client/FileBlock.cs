@@ -38,5 +38,19 @@ namespace IVySoft.VDS.Client
 
             return new FileBlock(block_id, block_key, replica_hashes.ToArray(), block_size);
         }
+
+        internal void Serialize(Stream stream)
+        {
+            stream.push_data(this.block_id_);
+            stream.push_data(this.block_key_);
+
+            stream.write_number(this.replica_hashes_.Length);
+
+            foreach(var replica_hash in this.replica_hashes_)
+            {
+                stream.push_data(replica_hash);
+            }
+            stream.push_int64(this.block_size_);
+        }
     }
 }

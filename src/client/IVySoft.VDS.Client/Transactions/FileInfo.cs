@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace IVySoft.VDS.Client.Transactions
 {
@@ -41,6 +42,20 @@ namespace IVySoft.VDS.Client.Transactions
             }
 
             return new FileInfo(name, mime_type, size, file_id, file_blocks.ToArray());
+        }
+
+        internal void Serialize(Stream stream)
+        {
+            stream.push_string(this.name_);
+            stream.push_string(this.mime_type_);
+            stream.push_int64(this.size_);
+            stream.push_data(this.file_id_);
+
+            stream.write_number(this.file_blocks_.Length);
+            foreach(var block in this.file_blocks_)
+            {
+                block.Serialize(stream);
+            }
         }
     }
 }
