@@ -13,33 +13,35 @@ namespace IVySoft.VDS.Client.Cmd.Tests
         [Fact]
         public void AllocateStorageTest()
         {
-            //if (Directory.Exists(VdsProcess.RootFolder))
-            //{
-            //    Directory.Delete(VdsProcess.RootFolder, true);
-            //}
+            if (Directory.Exists(VdsProcess.RootFolder))
+            {
+                Directory.Delete(VdsProcess.RootFolder, true);
+            }
 
-            //Assert.Equal(0, VdsProcess.InitRoot(login, password));
+            Assert.Equal(0, VdsProcess.InitRoot(login, password));
 
-            using(var servers = new VdsProcessSet(10))
+            using (var servers = new VdsProcessSet(10))
             {
                 servers.start();
 
-                //servers.allocate_storage(login, password, 10);
+                //servers.create_user(4, login, password);
+
+                servers.allocate_storage(login, password, 10);
 
                 var source_folder = Path.Combine(VdsProcess.RootFolder, "Original");
                 var dest_folder_local = Path.Combine(VdsProcess.RootFolder, "DestinationLocal");
                 var dest_folder_remote = Path.Combine(VdsProcess.RootFolder, "DestinationRemote");
 
-                //Directory.CreateDirectory(source_folder);
+                Directory.CreateDirectory(source_folder);
                 Directory.CreateDirectory(dest_folder_local);
                 Directory.CreateDirectory(dest_folder_remote);
 
                 const int file_count = 2;
-                //var rnd = new Random();
-                //for (int i = 0; i < file_count; ++i)
-                //{
-                //    GenerateRandomFile(rnd, Path.Combine(source_folder, i.ToString()));
-                //}
+                var rnd = new Random();
+                for (int i = 0; i < file_count; ++i)
+                {
+                    GenerateRandomFile(rnd, Path.Combine(source_folder, i.ToString()));
+                }
 
                 string channel_id = null;
                 foreach (var message in servers.GetChannels(login, password, 5))
@@ -59,7 +61,7 @@ namespace IVySoft.VDS.Client.Cmd.Tests
                 Assert.True(!string.IsNullOrEmpty(channel_id));
 
 
-                //servers.sync_files(login, password, channel_id, 5, source_folder);
+                servers.sync_files(login, password, channel_id, 5, source_folder);
                 servers.sync_files(login, password, channel_id, 5, dest_folder_local);
                 for (int i = 0; i < file_count; ++i)
                 {

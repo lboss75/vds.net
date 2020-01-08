@@ -35,6 +35,42 @@ namespace IVySoft.VDS.Client
             };
         }
 
+        public async Task<string> CreateUser(string login, string password)
+        {
+            RSACryptoServiceProvider user_key = new RSACryptoServiceProvider(4096);
+
+            var test = private_key_to_der(user_key, password);
+            private_key_from_der(test);
+
+            var profile_data = new Transactions.UserProfile {
+                password_hash = sha256(Encoding.UTF8.GetBytes(password)),
+                user_private_key = private_key_to_der(user_key, password)
+            }.Serialize();
+            var profile_id = await this.save_block(profile_data, profile_data.Length);
+
+            using (var ms = new System.IO.MemoryStream())
+            {
+                var storage_data = new Transactions.StoreBlockTransaction
+                {
+                    object_id = profile_id.BlockId,
+                    replicas = profile_id.Replicas
+                }.Sing(user_key).Serialize();
+                ms.Write(storage_data, 0, storage_data.Length);
+
+                storage_data = new Transactions.CreateUserTransaction
+                {
+                    user_email = login,
+                    user_name = login,
+                    user_profile_id = profile_id.BlockId,
+                    user_public_key = public_key_to_der(user_key)
+                }.Serialize();
+                ms.Write(storage_data, 0, storage_data.Length);
+
+                return await this.client_.call<string>(
+                    "broadcast",
+                    Convert.ToBase64String(ms.ToArray()));
+            }
+        }
         public async Task<ChannelMessage[]> GetChannels()
         {
             var messages = await this.client_.call<CryptedChannelMessage[]>("get_channel_messages", this.public_key_id_);
@@ -168,7 +204,7 @@ namespace IVySoft.VDS.Client
             }
         }
 
-        private byte[] encrypt_by_aes_256_cbc(byte[] key, byte[] iv, byte[] data)
+        private static byte[] encrypt_by_aes_256_cbc(byte[] key, byte[] iv, byte[] data)
         {
             using (Aes aesAlg = Aes.Create())
             {
@@ -231,7 +267,7 @@ namespace IVySoft.VDS.Client
             this.write_keys_.Add(public_key_id, new KeyPair { PublicKey = public_key, PrivateKey = private_key });
         }
 
-        private byte[] public_key_fingerprint(RSACryptoServiceProvider public_key)
+        public static byte[] public_key_fingerprint(RSACryptoServiceProvider public_key)
         {
             byte[] sshrsa_bytes = Encoding.Default.GetBytes("ssh-rsa");
             byte[] n = public_key.ExportParameters(false).Modulus;
@@ -262,7 +298,7 @@ namespace IVySoft.VDS.Client
             return cryptoServiceProvider;
         }
 
-        private byte[] symmetric_key_from_password(string password)
+        private static byte[] symmetric_key_from_password(string password)
         {
             return KeyDerivation.Pbkdf2(
                 password: password,
@@ -348,6 +384,26 @@ namespace IVySoft.VDS.Client
             var rsa = new RSACryptoServiceProvider();
             rsa.ImportParameters(rsaParameters);
             return rsa;
+        }
+        public static byte[] private_key_to_der(RSACryptoServiceProvider rsa)
+        {
+            RSAParameters rsaParameters = rsa.ExportParameters(true);
+            return new RsaPrivateKeyStructure(
+                new Org.BouncyCastle.Math.BigInteger(rsaParameters.Modulus),
+                new Org.BouncyCastle.Math.BigInteger(rsaParameters.Exponent),
+                new Org.BouncyCastle.Math.BigInteger(rsaParameters.D),
+                new Org.BouncyCastle.Math.BigInteger(rsaParameters.P),
+                new Org.BouncyCastle.Math.BigInteger(rsaParameters.Q),
+                new Org.BouncyCastle.Math.BigInteger(rsaParameters.DP),
+                new Org.BouncyCastle.Math.BigInteger(rsaParameters.DQ),
+                new Org.BouncyCastle.Math.BigInteger(rsaParameters.InverseQ)).ToAsn1Object().GetDerEncoded();
+        }
+        public static byte[] private_key_to_der(RSACryptoServiceProvider rsa, string password)
+        {
+            return encrypt_by_aes_256_cbc(
+                symmetric_key_from_password(password),
+                new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
+                private_key_to_der(rsa));
         }
 
         private static byte[] sha256(byte[] data)

@@ -12,11 +12,25 @@ namespace IVySoft.VDS.Client.Cmd
         {
             return Parser.Default.ParseArguments<ChannelsOptions, SyncOptions, AllocateStorageOptions>(args)
                 .MapResult(
+                  (CreateUserOptions opts) => RunAddAndReturnExitCode(opts),
                   (ChannelsOptions opts) => RunAddAndReturnExitCode(opts),
                   (SyncOptions opts) => RunAddAndReturnExitCode(opts),
                   (AllocateStorageOptions opts) => RunAddAndReturnExitCode(opts),
                   errs => 1);
 
+        }
+
+        public static int RunAddAndReturnExitCode(CreateUserOptions opts)
+        {
+            using (VdsApi api = new VdsApi(new VdsApiConfig
+            {
+                ServiceUri = "ws://" + opts.Server + "/api/ws"
+            }))
+            {
+                api.CreateUser(opts.Login, opts.Password).Wait();
+            }
+
+            return 0;
         }
 
         public static int RunAddAndReturnExitCode(AllocateStorageOptions opts)

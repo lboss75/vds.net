@@ -28,6 +28,16 @@ namespace IVySoft.VDS.Client.Cmd.Tests
             }
         }
 
+        internal int create_user(int server_index, string login, string password)
+        {
+            return Program.RunAddAndReturnExitCode(new CreateUserOptions
+            {
+                Login = login,
+                Password = password,
+                Server = $"localhost:{8050 + server_index}"
+            });
+        }
+
         public void allocate_storage(string login, string password, long size)
         {
             for (int i = 0; i < this.servers_.Length; ++i)
