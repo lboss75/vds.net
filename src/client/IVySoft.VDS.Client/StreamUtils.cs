@@ -92,6 +92,25 @@ namespace IVySoft.VDS.Client
             stream.WriteByte((byte)((value >> 8) & 0xFF));
             stream.WriteByte((byte)(value & 0xFF));
         }
+        public static Int32 get_int32(this Stream stream)
+        {
+            Int32 result = 0;
+            for (var i = 0; i < 4; ++i)
+            {
+                var value = stream.ReadByte();
+                result <<= 8;
+                result |= value;
+            }
+
+            return result;
+        }
+        public static void push_int32(this Stream stream, Int32 value)
+        {
+            stream.WriteByte((byte)((value >> 24) & 0xFF));
+            stream.WriteByte((byte)((value >> 16) & 0xFF));
+            stream.WriteByte((byte)((value >> 8) & 0xFF));
+            stream.WriteByte((byte)(value & 0xFF));
+        }
 
         public static string get_string(this Stream stream)
         {

@@ -20,13 +20,16 @@ namespace IVySoft.VDS.Client.Cmd.Tests
 
             Assert.Equal(0, VdsProcess.InitRoot(login, password));
 
-            using (var servers = new VdsProcessSet(10))
+            using (var servers = new VdsProcessSet(2))
             {
                 servers.start();
+                System.Threading.Thread.Sleep(10000);
+                servers.waiting_sync();
 
                 //servers.create_user(4, login, password);
 
                 servers.allocate_storage(login, password, 10);
+                servers.waiting_sync();
 
                 var source_folder = Path.Combine(VdsProcess.RootFolder, "Original");
                 var dest_folder_local = Path.Combine(VdsProcess.RootFolder, "DestinationLocal");
@@ -44,7 +47,7 @@ namespace IVySoft.VDS.Client.Cmd.Tests
                 }
 
                 string channel_id = null;
-                foreach (var message in servers.GetChannels(login, password, 5))
+                foreach (var message in servers.GetChannels(login, password, 1))
                 {
                     switch (message)
                     {
@@ -61,14 +64,15 @@ namespace IVySoft.VDS.Client.Cmd.Tests
                 Assert.True(!string.IsNullOrEmpty(channel_id));
 
 
-                servers.sync_files(login, password, channel_id, 5, source_folder);
-                servers.sync_files(login, password, channel_id, 5, dest_folder_local);
+                servers.sync_files(login, password, channel_id, 1, source_folder);
+                servers.sync_files(login, password, channel_id, 1, dest_folder_local);
                 for (int i = 0; i < file_count; ++i)
                 {
                     CompareFile(Path.Combine(source_folder, i.ToString()), Path.Combine(dest_folder_local, i.ToString()));
                 }
+                servers.waiting_sync();
 
-                servers.sync_files(login, password, channel_id, 7, dest_folder_remote);
+                servers.sync_files(login, password, channel_id, 0, dest_folder_remote);
                 for (int i = 0; i < file_count; ++i)
                 {
                     CompareFile(Path.Combine(source_folder, i.ToString()), Path.Combine(dest_folder_remote, i.ToString()));

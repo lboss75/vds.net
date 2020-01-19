@@ -38,41 +38,45 @@ namespace IVySoft.VDS.Client.Cmd.Tests
             });
         }
 
+        internal void waiting_sync()
+        {
+            for (int t = 0; t < 100; ++t)
+            {
+                bool bContinue = false;
+                var items = new HashSet<string>();
+                for (int i = 0; i < this.servers_.Length; ++i)
+                {
+                    this.servers_[i].Sync($"localhost:{8050 + i}", items, ref bContinue);
+                }
+
+                if (!bContinue)
+                {
+                    break;
+                }
+
+                System.Threading.Thread.Sleep(1000);
+            }
+        }
+
         public void allocate_storage(string login, string password, long size)
         {
             for (int i = 0; i < this.servers_.Length; ++i)
             {
-                for (int j = 0; ; ++j)
+                var code = Program.RunAddAndReturnExitCode(new AllocateStorageOptions
                 {
-                    try
-                    {
-                        var code = Program.RunAddAndReturnExitCode(new AllocateStorageOptions
-                        {
-                            Login = login,
-                            Password = password,
-                            Server = $"localhost:{8050 + i}",
-                            DestinationPath = System.IO.Path.Combine(this.servers_[i].ServerRoot, "storage"),
-                            Length = size
-                        });
+                    Login = login,
+                    Password = password,
+                    Server = $"localhost:{8050 + i}",
+                    DestinationPath = System.IO.Path.Combine(this.servers_[i].ServerRoot, "storage"),
+                    Length = size
+                });
 
-                        if (0 == code)
-                        {
-                            break;
-                        }
-
-                        throw new Exception($"Allocate storage failed with code {code}");
-                    }
-                    catch (Exception ex)
-                    {
-                        if (ex.InnerException != null && ex.InnerException.Message == "User not found" && j < 100)
-                        {
-                            System.Threading.Thread.Sleep(60 * 1000);
-                            continue;
-                        }
-
-                        throw;
-                    }
+                if (0 == code)
+                {
+                    break;
                 }
+
+                throw new Exception($"Allocate storage failed with code {code}");
             }
         }
 

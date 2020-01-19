@@ -37,8 +37,8 @@ namespace IVySoft.VDS.Client
 
         public async Task<string> CreateUser(string login, string password)
         {
-            RSACryptoServiceProvider user_key = new RSACryptoServiceProvider(4096);
-
+            var user_key = new RSACryptoServiceProvider(4096);
+            
             var test = private_key_to_der(user_key, password);
             private_key_from_der(test);
 
@@ -50,27 +50,34 @@ namespace IVySoft.VDS.Client
 
             using (var ms = new System.IO.MemoryStream())
             {
-                var storage_data = new Transactions.StoreBlockTransaction
-                {
-                    object_id = profile_id.BlockId,
-                    replicas = profile_id.Replicas
-                }.Sing(user_key).Serialize();
-                ms.Write(storage_data, 0, storage_data.Length);
+                new Transactions.StoreBlockTransaction(                
+                    profile_id.Key.BlockId,
+                    profile_data.Length,
+                    profile_id.Value.replica_size,
+                    profile_id.Value.replicas.Select(x => Convert.FromBase64String(x)).ToArray(),
+                    user_key
+                ).Serialize(ms);
 
-                storage_data = new Transactions.CreateUserTransaction
+                new Transactions.CreateUserTransaction
                 {
                     user_email = login,
                     user_name = login,
-                    user_profile_id = profile_id.BlockId,
+                    user_profile_id = profile_id.Key.BlockId,
                     user_public_key = public_key_to_der(user_key)
-                }.Serialize();
-                ms.Write(storage_data, 0, storage_data.Length);
+                }.Serialize(ms);
 
                 return await this.client_.call<string>(
                     "broadcast",
                     Convert.ToBase64String(ms.ToArray()));
             }
         }
+
+        public async Task<string[]> get_sync_state()
+        {
+            var client = await this.get_client();
+            return await client.call<string[]>("log_head");
+        }
+
         public async Task<ChannelMessage[]> GetChannels()
         {
             var messages = await this.client_.call<CryptedChannelMessage[]>("get_channel_messages", this.public_key_id_);
@@ -83,7 +90,7 @@ namespace IVySoft.VDS.Client
             return messages.Select(x => this.decrypt(channel.ReadKey, x)).ToArray();
         }
 
-        public async Task AllocateStorage(string folder, long size)
+        public async Task<byte[]> AllocateStorage(string folder, long size)
         {
             System.IO.Directory.CreateDirectory(folder);
 
@@ -99,7 +106,7 @@ namespace IVySoft.VDS.Client
                 }));
 
             var der = public_key_to_der(this.write_keys_[this.public_key_id_].PublicKey);
-            await this.client_.call<bool>("allocate_storage", Convert.ToBase64String(der), folder, size);
+            return Convert.FromBase64String(await this.client_.call<string>("allocate_storage", Convert.ToBase64String(der), folder, size));
         }
 
         private ChannelMessage decrypt(CryptedChannelMessage message)
@@ -164,7 +171,8 @@ namespace IVySoft.VDS.Client
 
         public async Task<byte[]> Dawnload(FileBlock file_block)
         {
-            var result = await this.client_.call<string>("download", file_block.Replicas.Select(x => Convert.ToBase64String(x)).ToArray());
+            var replicas = await this.client_.call<LookingBlockResponse>("looking_block", file_block.BlockId);
+            var result = await this.client_.call<string>("download", replicas.replicas);
             return decrypt_file_block(file_block, Convert.FromBase64String(result));
         }
 
@@ -235,9 +243,17 @@ namespace IVySoft.VDS.Client
         public async Task Login(string login, string password)
         {
             var client = await this.get_client();
-            var keys = await client.call<LoginResponse>("login", login, user_credentials_to_key(password));
+            var keys = await client.call<LoginResponse>("login", login);
+            var user_profile_replicas = await client.call<LookingBlockResponse>("looking_block", Convert.FromBase64String(keys.user_profile_id));
+            var user_profile_data = await client.call<string>("download", user_profile_replicas.replicas);
+            var user_profile = Transactions.UserProfile.Deserialize(new System.IO.MemoryStream(Convert.FromBase64String(user_profile_data)));
 
-            var private_key = decrypt_private_key(Convert.FromBase64String(keys.private_key), password);
+            if(Convert.ToBase64String(user_profile.password_hash) != Convert.ToBase64String(sha256(Encoding.UTF8.GetBytes(password))))
+            {
+                throw new Exception("Invalid password");
+            }
+
+            var private_key = decrypt_private_key(user_profile.user_private_key, password);
             var public_key = parse_public_key(keys.public_key);
             this.public_key_id_ = Convert.ToBase64String(public_key_fingerprint(public_key));
 
@@ -445,11 +461,15 @@ namespace IVySoft.VDS.Client
             }
         }
 
-        public async Task<string> UploadFiles(Transactions.ChannelCreateTransaction channel_data, string message, FileUploadStream[] inputFiles)
+        public async Task<string> UploadFiles(
+            Transactions.ChannelCreateTransaction channel_data,
+            string message,
+            FileUploadStream[] inputFiles)
         {
             var chunkSize = 67108864;
             var chunk = new byte[chunkSize];
             var files = new List<Transactions.FileInfo>();
+            var playload = new System.IO.MemoryStream();
             foreach (var inputFile in inputFiles)
             {
                 var blocks = new List<FileBlock>();
@@ -470,14 +490,34 @@ namespace IVySoft.VDS.Client
 
                                 if (offset == chunkSize)
                                 {
-                                    blocks.Add(await save_block(chunk, chunkSize));
+                                    var block_info = await save_block(chunk, chunkSize);
+                                    new Transactions.StoreBlockTransaction(
+                                    
+                                        block_info.Key.BlockId,
+                                        chunkSize,
+                                        block_info.Value.replica_size,
+                                        block_info.Value.replicas.Select(x => Convert.FromBase64String(x)).ToArray(),
+                                        this.write_keys_[this.public_key_id_].PrivateKey
+                                        ).Serialize(playload);
+
+                                    blocks.Add(block_info.Key);
                                     offset = 0;
                                 }
                                 continue;
                             }
                             if (0 < offset)
                             {
-                                blocks.Add(await save_block(chunk, offset));
+                                var block_info = await save_block(chunk, offset);
+                                new Transactions.StoreBlockTransaction(
+
+                                    block_info.Key.BlockId,
+                                    offset,
+                                    block_info.Value.replica_size,
+                                    block_info.Value.replicas.Select(x => Convert.FromBase64String(x)).ToArray(),
+                                    this.write_keys_[this.public_key_id_].PrivateKey
+                                    ).Serialize(playload);
+
+                                blocks.Add(block_info.Key);
                             }
                             break;
                         }
@@ -498,13 +538,17 @@ namespace IVySoft.VDS.Client
                     ));
                 }
             }
-            return await this.client_.call<string>(
-                "broadcast",
-                Convert.ToBase64String(channel_encrypt(channel_data, 
+
+            var cripted_data = channel_encrypt(channel_data,
                     new Transactions.UserMessageTransaction(
                         string.IsNullOrWhiteSpace(message) ? "{\"$type\":\"SimpleMessage\"}" : message,
                         files.ToArray()
-                    ).Serialize())));
+                    ).Serialize());
+            playload.Write(cripted_data, 0, cripted_data.Length);
+
+            return await this.client_.call<string>(
+                "broadcast",
+                Convert.ToBase64String(playload.ToArray()));
         }
 
         private byte[] channel_encrypt(Transactions.ChannelCreateTransaction channel_data, byte[] data)
@@ -553,7 +597,7 @@ namespace IVySoft.VDS.Client
             }
         }
 
-        private async Task<FileBlock> save_block(byte[] data, int size)
+        private async Task<KeyValuePair<FileBlock, BlockInfo>> save_block(byte[] data, int size)
         {
             var key_data = sha256(data, size);
             var iv_data = new byte[] { 0xa5, 0xbb, 0x9f, 0xce, 0xc2, 0xe4, 0x4b, 0x91, 0xa8, 0xc9, 0x59, 0x44, 0x62, 0x55, 0x90, 0x24 };
@@ -562,12 +606,13 @@ namespace IVySoft.VDS.Client
             var zipped = deflate(data, size);
             var crypted_data = encrypt_by_aes_256_cbc(key_data2, iv_data, zipped);
             var result = await this.client_.call<BlockInfo>("upload", Convert.ToBase64String(crypted_data));
-            return new FileBlock(
-                key_data,
-                key_data2,
-                result.replicas.Select(x => Convert.FromBase64String(x)).ToArray(),
-                size
-            );
+            return new KeyValuePair<FileBlock, BlockInfo>(
+                new FileBlock(
+                    key_data,
+                    key_data2,
+                    size
+                ),
+                result);
         }
 
         private byte[] inflate(byte[] data)

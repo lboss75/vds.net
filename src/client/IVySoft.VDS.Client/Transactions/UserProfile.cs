@@ -18,5 +18,11 @@ namespace IVySoft.VDS.Client.Transactions
                 return ms.ToArray();
             }
         }
+        internal static UserProfile Deserialize(System.IO.Stream stream)
+        {
+            var password_hash = stream.pop_data();
+            var user_private_key = stream.pop_data();
+            return new UserProfile { password_hash = password_hash, user_private_key = user_private_key };
+        }
     }
 }

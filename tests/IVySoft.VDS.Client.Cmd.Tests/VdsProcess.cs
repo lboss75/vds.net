@@ -46,6 +46,42 @@ namespace IVySoft.VDS.Client.Cmd.Tests
             }
         }
 
+        internal void Sync(string server, HashSet<string> items, ref bool bContinue)
+        {
+            using (VdsApi api = new VdsApi(new VdsApiConfig
+            {
+                ServiceUri = "ws://" + server + "/api/ws"
+            }))
+            {
+                var current = api.get_sync_state().Result;
+                foreach(var item in current)
+                {
+                    if (!items.Contains(item))
+                    {
+                        items.Add(item);
+                        bContinue = true;
+                    }
+                }
+
+                foreach(var item in items)
+                {
+                    bool bFound = false;
+                    foreach(var citem in current)
+                    {
+                        if(item == citem)
+                        {
+                            bFound = true;
+                            break;
+                        }
+                    }
+                    if (!bFound)
+                    {
+                        bContinue = true;
+                    }
+                }            
+            }
+        }
+
         internal void Terminate()
         {
             if (null != this.process_)
