@@ -16,5 +16,13 @@ namespace IVySoft.VDS.Client.UI.WinForms
         {
             InitializeComponent();
         }
+
+        public string Login { get { return this.loginEdit.Text; } set { this.loginEdit.Text = value; } }
+        public string Password { get { return this.editPassword.Text; } set { this.editPassword.Text = value; } }
+
+        private void okBtn_Click(object sender, EventArgs e)
+        {
+            DialogResult = DialogResult.OK;
+        }
     }
 }

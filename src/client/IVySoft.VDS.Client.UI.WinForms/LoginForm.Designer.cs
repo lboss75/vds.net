@@ -33,6 +33,7 @@
             this.label2 = new System.Windows.Forms.Label();
             this.editPassword = new System.Windows.Forms.TextBox();
             this.okBtn = new System.Windows.Forms.Button();
+            this.registerBtn = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // label1
@@ -75,12 +76,23 @@
             // okBtn
             // 
             this.okBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.okBtn.Location = new System.Drawing.Point(470, 150);
+            this.okBtn.Location = new System.Drawing.Point(422, 150);
             this.okBtn.Name = "okBtn";
-            this.okBtn.Size = new System.Drawing.Size(75, 43);
+            this.okBtn.Size = new System.Drawing.Size(123, 43);
             this.okBtn.TabIndex = 4;
             this.okBtn.Text = "Вход";
             this.okBtn.UseVisualStyleBackColor = true;
+            this.okBtn.Click += new System.EventHandler(this.okBtn_Click);
+            // 
+            // registerBtn
+            // 
+            this.registerBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.registerBtn.Location = new System.Drawing.Point(12, 150);
+            this.registerBtn.Name = "registerBtn";
+            this.registerBtn.Size = new System.Drawing.Size(114, 43);
+            this.registerBtn.TabIndex = 5;
+            this.registerBtn.Text = "Регистрация";
+            this.registerBtn.UseVisualStyleBackColor = true;
             // 
             // LoginForm
             // 
@@ -88,6 +100,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(557, 205);
+            this.Controls.Add(this.registerBtn);
             this.Controls.Add(this.okBtn);
             this.Controls.Add(this.editPassword);
             this.Controls.Add(this.label2);
@@ -108,6 +121,7 @@
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.TextBox editPassword;
         private System.Windows.Forms.Button okBtn;
+        private System.Windows.Forms.Button registerBtn;
     }
 }
 

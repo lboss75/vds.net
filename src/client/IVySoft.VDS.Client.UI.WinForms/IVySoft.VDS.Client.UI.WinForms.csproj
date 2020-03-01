@@ -33,6 +33,18 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="BouncyCastle.Crypto, Version=1.8.6.0, Culture=neutral, PublicKeyToken=0e99375e54769942, processorArchitecture=MSIL">
+      <HintPath>..\packages\Portable.BouncyCastle.1.8.6\lib\net40\BouncyCastle.Crypto.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AspNetCore.Cryptography.Internal, Version=3.1.2.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNetCore.Cryptography.Internal.3.1.2\lib\netstandard2.0\Microsoft.AspNetCore.Cryptography.Internal.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AspNetCore.Cryptography.KeyDerivation, Version=3.1.2.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNetCore.Cryptography.KeyDerivation.3.1.2\lib\netstandard2.0\Microsoft.AspNetCore.Cryptography.KeyDerivation.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.12.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -75,6 +87,7 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -87,6 +100,16 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\IVySoft.VDS.Client.UI.Logic\IVySoft.VDS.Client.UI.Logic.csproj">
+      <Project>{82c19710-80fc-440e-86f5-910af540c278}</Project>
+      <Name>IVySoft.VDS.Client.UI.Logic</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\IVySoft.VDS.Client\IVySoft.VDS.Client.csproj">
+      <Project>{3d03c9ed-09f0-49b5-afa6-384eaf8bda2b}</Project>
+      <Name>IVySoft.VDS.Client</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

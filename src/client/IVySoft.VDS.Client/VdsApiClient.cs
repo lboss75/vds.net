@@ -17,6 +17,9 @@ namespace IVySoft.VDS.Client
         private readonly Dictionary<int, Action<int, JToken>> subscriptions_ = new Dictionary<int, Action<int, JToken>>();
         private readonly Dictionary<int, TaskCompletionSource<JToken>> action_handlers_ = new Dictionary<int, TaskCompletionSource<JToken>>();
 
+
+        public Action<Exception> ErrorHandler { get; set; }
+
         public async Task Connect(VdsApiClientOptions options)
         {
             using (var cts = new CancellationTokenSource(options.ConnectionTimeout))
@@ -79,6 +82,11 @@ namespace IVySoft.VDS.Client
                 }
 
                 this.action_handlers_.Clear();
+            }
+
+            if (null != this.ErrorHandler)
+            {
+                this.ErrorHandler(ex);
             }
         }
 

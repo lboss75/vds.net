@@ -17,6 +17,7 @@ namespace IVySoft.VDS.Client.Transactions
             this.files_ = files;
         }
 
+        public string Message { get => this.message_; }
         public IEnumerable<FileInfo> Files { get { return this.files_; } }
 
         internal static ChannelMessage Deserialize(System.IO.Stream stream)

@@ -24,6 +24,7 @@ namespace IVySoft.VDS.Client
 
         private readonly Dictionary<string, KeyPair> read_keys_ = new Dictionary<string, KeyPair>();
         private readonly Dictionary<string, KeyPair> write_keys_ = new Dictionary<string, KeyPair>();
+        public Action<Exception> ErrorHandler { get; set; }
 
         public VdsApi(VdsApiConfig config)
         {
@@ -266,6 +267,7 @@ namespace IVySoft.VDS.Client
             if(null == this.client_)
             {
                 var client = new VdsApiClient();
+                client.ErrorHandler = this.ErrorHandler;
                 await client.Connect(this.options_);
                 this.client_ = client;
             }
@@ -524,7 +526,7 @@ namespace IVySoft.VDS.Client
                         provider.TransformFinalBlock(chunk, 0, 0);
                     }
 
-                    if (!inputFile.FileHash.SequenceEqual(provider.Hash))
+                    if (inputFile.FileHash != null && !inputFile.FileHash.SequenceEqual(provider.Hash))
                     {
                         throw new Exception($"File {inputFile.SystemPath} has been changed during upload process");
                     }

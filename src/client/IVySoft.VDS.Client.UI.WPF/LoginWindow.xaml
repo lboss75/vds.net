@@ -1,0 +1,33 @@
+﻿<Window x:Class="IVySoft.VDS.Client.UI.WPF.LoginWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:IVySoft.VDS.Client.UI.WPF"
+        mc:Ignorable="d"
+        WindowStartupLocation="CenterScreen"
+        Title="Вход - Virtual Dirstributed Storage" Height="130" Width="400"
+        Loaded="Window_Loaded">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <Label>Логин:</Label>
+        <TextBox Grid.Column="1" x:Name="loginEdit"/>
+
+        <Label Grid.Row="1">Пароль:</Label>
+        <PasswordBox Grid.Row="1" Grid.Column="1" x:Name="passwordEdit"/>
+
+        <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center">
+            <Button Margin="10" Padding="10" Width="100" x:Name="okBtn" Click="okBtn_Click">Вход</Button>
+            <Button Margin="10" Padding="10" Width="100" x:Name="registerBtn">Регистрация</Button>
+        </StackPanel>
+    </Grid>
+</Window>
