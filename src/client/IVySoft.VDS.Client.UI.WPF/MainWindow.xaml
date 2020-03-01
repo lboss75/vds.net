@@ -40,11 +40,13 @@
                                 <ItemsControl ItemsSource="{Binding Files}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <TextBlock>
-                                                <Hyperlink Click="FileHyperlink_Click">
-                                                    <TextBlock Text="{Binding Name}"/>
-                                                </Hyperlink>
-                                            </TextBlock>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock>
+                                                    <Hyperlink Click="FileHyperlink_Click" Tag="{Binding .}">
+                                                        <TextBlock Text="{Binding Name}"/>
+                                                    </Hyperlink>
+                                                </TextBlock>
+                                            </StackPanel>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
@@ -74,6 +76,5 @@
                 </StackPanel>
             </Grid>
         </Grid>
-
     </Grid>
 </Window>

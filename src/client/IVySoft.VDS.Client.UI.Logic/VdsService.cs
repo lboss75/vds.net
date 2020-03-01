@@ -1,4 +1,7 @@
-﻿using System;
+﻿using IVySoft.VDS.Client.Transactions;
+using System;
+using System.Linq;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 
 namespace IVySoft.VDS.Client.UI.Logic
@@ -50,7 +53,62 @@ namespace IVySoft.VDS.Client.UI.Logic
                 this.api_ = null;
             }
         }
+        private static byte[] CalculateHash(string file_name)
+        {
+            using (var f = System.IO.File.OpenRead(file_name))
+            {
+                using (var provider = SHA256.Create())
+                {
+                    return provider.ComputeHash(f);
+                }
+            }
+        }
+        public async Task<string> Dawnload(FileInfo file_info, string target_folder)
+        {
+            foreach (var f in System.IO.Directory.GetFiles(target_folder,
+                System.IO.Path.GetFileNameWithoutExtension(file_info.Name)
+                + "*"
+                + System.IO.Path.GetExtension(file_info.Name)))
+            {
+                var h = CalculateHash(f);
+                if (h.SequenceEqual(file_info.Id))
+                {
+                    return f;
+                }
+            }
 
+            var tmp = System.IO.Path.GetTempFileName();
+            try
+            {
+                using (var tmp_file = System.IO.File.Create(tmp))
+                {
+                    foreach (var file_block in file_info.Blocks)
+                    {
+                        var result = this.api_.Dawnload(file_block).Result;
+                        tmp_file.Write(result, 0, result.Length);
+                    }
+                }
+            }
+            catch
+            {
+                try { System.IO.File.Delete(tmp); } catch { }
+                throw;
+            }
 
+            for(int i = 0; i < int.MaxValue; ++i)
+            {
+                var file_name = System.IO.Path.Combine(target_folder,
+                    System.IO.Path.GetFileNameWithoutExtension(file_info.Name)
+                    + ((0 == i) ? string.Empty : $"({i})")
+                    + System.IO.Path.GetExtension(file_info.Name));
+                if (!System.IO.File.Exists(file_name))
+                {
+                    System.IO.File.Copy(tmp, file_name, true);
+                    return file_name;
+                }
+            }
+
+            throw new Exception("Invalid program");
+        }
     }
 }
