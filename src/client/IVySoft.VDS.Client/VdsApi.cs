@@ -504,6 +504,13 @@ namespace IVySoft.VDS.Client
 
                                     blocks.Add(block_info.Key);
                                     offset = 0;
+                                    if (null != inputFile.ProgressCallback)
+                                    {
+                                        if (!inputFile.ProgressCallback((int)(100 * size / f.Length)))
+                                        {
+                                            return string.Empty;
+                                        }
+                                    }
                                 }
                                 continue;
                             }
@@ -520,6 +527,13 @@ namespace IVySoft.VDS.Client
                                     ).Serialize(playload);
 
                                 blocks.Add(block_info.Key);
+                                if(null != inputFile.ProgressCallback)
+                                {
+                                    if(!inputFile.ProgressCallback((int)(100 * size / f.Length)))
+                                    {
+                                        return string.Empty;
+                                    }
+                                }
                             }
                             break;
                         }

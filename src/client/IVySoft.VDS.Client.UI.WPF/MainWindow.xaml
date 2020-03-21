@@ -25,56 +25,8 @@
             </ListView.ItemTemplate>
         </ListView>
         <GridSplitter Grid.Column="1" Width="3" HorizontalAlignment="Center" VerticalAlignment="Stretch"/>
-        <Grid Grid.Column="2">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="150"/>
-            </Grid.RowDefinitions>
-            <ScrollViewer>
-                <ListView ItemsSource="{Binding MessagesList}">
-                    <ListView.ItemTemplate>
-                        <DataTemplate>
-                            <StackPanel>
-                                <TextBlock Text="{Binding Message}" />
-                                <ItemsControl ItemsSource="{Binding Files}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <StackPanel Orientation="Horizontal">
-                                                <TextBlock>
-                                                    <Hyperlink Click="FileHyperlink_Click" Tag="{Binding .}">
-                                                        <TextBlock Text="{Binding Name}"/>
-                                                    </Hyperlink>
-                                                </TextBlock>
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </StackPanel>
-                        </DataTemplate>
-                    </ListView.ItemTemplate>                    
-                </ListView>                
-            </ScrollViewer>
-            <GridSplitter Grid.Row="1" Height="3" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
-            <Grid Grid.Row="2">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
-                <Label>Сообщение:</Label>
-                <TextBox Grid.Column="1" />
-                <Button Grid.Column="2" Margin="10" Padding="10">Отправить</Button>
-                <Label Grid.Row="1" >Файлы:</Label>
-                <ListView Grid.Row="1" Grid.Column="1"/>
-                <StackPanel Grid.Row="1" Grid.Column="2">
-                    <Button Margin="10" Padding="10">Добавить</Button>
-                </StackPanel>
-            </Grid>
+        <Grid Grid.Column="2" x:Name="ChannelBody">
+            <TextBlock>Выберите канал</TextBlock>
         </Grid>
     </Grid>
 </Window>

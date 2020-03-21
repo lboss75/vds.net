@@ -1,4 +1,4 @@
-﻿using System.IO;
+﻿using System;
 
 namespace IVySoft.VDS.Client
 {
@@ -7,5 +7,6 @@ namespace IVySoft.VDS.Client
         public string Name { get; set; }
         public string SystemPath { get; set; }
         public byte[] FileHash { get; set; }
+        public Func<int, bool> ProgressCallback { get; set; }
     }
 }

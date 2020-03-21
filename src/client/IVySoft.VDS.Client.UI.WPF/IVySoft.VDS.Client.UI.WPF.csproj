@@ -7,7 +7,19 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="msgUserImage.png" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\IVySoft.VDS.Client.UI.Logic\IVySoft.VDS.Client.UI.Logic.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Images\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="msgUserImage.png" />
   </ItemGroup>
 
 </Project>

@@ -84,7 +84,7 @@ namespace IVySoft.VDS.Client.UI.Logic
                 {
                     foreach (var file_block in file_info.Blocks)
                     {
-                        var result = this.api_.Dawnload(file_block).Result;
+                        var result = await this.api_.Dawnload(file_block);
                         tmp_file.Write(result, 0, result.Length);
                     }
                 }

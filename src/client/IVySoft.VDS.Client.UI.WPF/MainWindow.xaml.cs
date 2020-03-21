@@ -1,4 +1,5 @@
 ﻿using IVySoft.VDS.Client.UI.Logic;
+using IVySoft.VDS.Client.UI.Logic.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,7 +31,7 @@ namespace IVySoft.VDS.Client.UI.WPF
             InitializeComponent();
         }
 
-        private new MainWindowDataContext DataContext
+        internal new MainWindowDataContext DataContext
         {
             get
             {
@@ -109,7 +110,7 @@ namespace IVySoft.VDS.Client.UI.WPF
                 this.VdsService_OnLoginRequired(this, new LoginRequiredEventArg());
             });
         }
-        private void OnError(string title, Exception ex)
+        internal void OnError(string title, Exception ex)
         {
             this.Dispatcher.Invoke(() =>
             {
@@ -163,10 +164,16 @@ namespace IVySoft.VDS.Client.UI.WPF
         {
             this.DataContext.MessagesList.Clear();
 
-            var item = (Transactions.ChannelCreateTransaction)ChannelList.SelectedItem;
-            if (null != item)
+            this.ChannelBody.Children.Clear();
+            this.ChannelBody.Children.Add(new ucMessagerChannel
             {
-                VdsService.Instance.Api.GetChannelMessages(item).ContinueWith(x =>
+                DataContext = this.DataContext
+            });
+
+            this.DataContext.SelectedChannel = (Transactions.ChannelCreateTransaction)ChannelList.SelectedItem;
+            if (null != this.DataContext.SelectedChannel)
+            {
+                VdsService.Instance.Api.GetChannelMessages(this.DataContext.SelectedChannel).ContinueWith(x =>
                 {
                     if (x.IsFaulted)
                     {
@@ -188,31 +195,12 @@ namespace IVySoft.VDS.Client.UI.WPF
                     switch (item)
                     {
                         case Transactions.UserMessageTransaction msg:
-                            this.DataContext.MessagesList.Add(msg);
+                            this.DataContext.MessagesList.Add(new Logic.Model.ChannelMessage(msg));
                             break;
                     }
                 }
             });
         }
 
-        private void FileHyperlink_Click(object sender, RoutedEventArgs e)
-        {
-            var target_folder = System.IO.Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                "Downloads");
-            var fb = (Transactions.FileInfo)((Hyperlink)e.OriginalSource).Tag;
-
-            VdsService.Instance.Dawnload(fb, target_folder).ContinueWith(x =>
-            {
-                if (x.IsFaulted)
-                {
-                    this.OnError("Ошибка скачивания файла", x.Exception);
-                }
-                else
-                {
-                    System.Diagnostics.Process.Start(x.Result);
-                }
-            });
-        }
     }
 }
