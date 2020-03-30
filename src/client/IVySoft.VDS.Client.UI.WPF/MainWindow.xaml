@@ -10,6 +10,12 @@
         Title="Virtual Dirstributed Storage" Height="450" Width="800"
         Loaded="Window_Loaded"
         Closed="Window_Closed">
+    <DockPanel>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="Создать">
+                <MenuItem Header="Канал" Click="CreateChannel_Executed" />
+            </MenuItem>
+        </Menu>
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="300"/>
@@ -29,4 +35,6 @@
             <TextBlock>Выберите канал</TextBlock>
         </Grid>
     </Grid>
+    </DockPanel>
+
 </Window>

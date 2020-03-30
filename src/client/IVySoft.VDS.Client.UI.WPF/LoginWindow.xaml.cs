@@ -1,4 +1,5 @@
-﻿using System;
+﻿using IVySoft.VDS.Client.UI.Logic;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Windows;
@@ -37,5 +38,47 @@ namespace IVySoft.VDS.Client.UI.WPF
             loginEdit.Text = this.Login;
             passwordEdit.Password = this.Password;
         }
+
+        private void registerBtn_Click(object sender, RoutedEventArgs e)
+        {
+            var dlg = new RegisterDlg();
+            if(true == dlg.ShowDialog())
+            {
+                var save_cursor = Mouse.OverrideCursor;
+                Mouse.OverrideCursor = Cursors.Wait;
+                VdsService.Instance.Api.CreateUser(dlg.Login, dlg.Password).ContinueWith(x =>
+                {
+                    Dispatcher.Invoke(() =>
+                    {
+                        Mouse.OverrideCursor = save_cursor;
+
+                        if (x.IsFaulted)
+                        {
+                            this.OnCreateUserError(x.Exception);
+                        }
+                        else
+                        {
+                            this.Login = dlg.Login;
+                            this.Password = dlg.Password;
+                            this.DialogResult = true;
+                        }
+                    });
+                });
+            }
+        }
+
+        private void OnCreateUserError(Exception ex)
+        {
+            this.Dispatcher.Invoke(() =>
+            {
+                MessageBox.Show(
+                    this,
+                    UIUtils.GetErrorMessage(ex),
+                    this.Title,
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            });
+        }
+
     }
 }

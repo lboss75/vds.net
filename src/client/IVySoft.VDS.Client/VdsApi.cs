@@ -25,6 +25,7 @@ namespace IVySoft.VDS.Client
         private readonly Dictionary<string, KeyPair> read_keys_ = new Dictionary<string, KeyPair>();
         private readonly Dictionary<string, KeyPair> write_keys_ = new Dictionary<string, KeyPair>();
         public Action<Exception> ErrorHandler { get; set; }
+        public string UserId { get => public_key_id_; }
 
         public VdsApi(VdsApiConfig config)
         {
@@ -38,24 +39,22 @@ namespace IVySoft.VDS.Client
 
         public async Task<string> CreateUser(string login, string password)
         {
+            var client = await this.get_client();
             var user_key = new RSACryptoServiceProvider(4096);
             
-            var test = private_key_to_der(user_key, password);
-            private_key_from_der(test);
-
             var profile_data = new Transactions.UserProfile {
                 password_hash = sha256(Encoding.UTF8.GetBytes(password)),
                 user_private_key = private_key_to_der(user_key, password)
             }.Serialize();
-            var profile_id = await this.save_block(profile_data, profile_data.Length);
+            var profile_id = await client.call<BlockInfo>("upload", Convert.ToBase64String(profile_data));
 
             using (var ms = new System.IO.MemoryStream())
             {
-                new Transactions.StoreBlockTransaction(                
-                    profile_id.Key.BlockId,
+                new Transactions.StoreBlockTransaction(
+                    Convert.FromBase64String(profile_id.hash),
                     profile_data.Length,
-                    profile_id.Value.replica_size,
-                    profile_id.Value.replicas.Select(x => Convert.FromBase64String(x)).ToArray(),
+                    profile_id.replica_size,
+                    profile_id.replicas.Select(x => Convert.FromBase64String(x)).ToArray(),
                     user_key
                 ).Serialize(ms);
 
@@ -63,7 +62,7 @@ namespace IVySoft.VDS.Client
                 {
                     user_email = login,
                     user_name = login,
-                    user_profile_id = profile_id.Key.BlockId,
+                    user_profile_id = Convert.FromBase64String(profile_id.hash),
                     user_public_key = public_key_to_der(user_key)
                 }.Serialize(ms);
 
@@ -108,6 +107,11 @@ namespace IVySoft.VDS.Client
 
             var der = public_key_to_der(this.write_keys_[this.public_key_id_].PublicKey);
             return Convert.FromBase64String(await this.client_.call<string>("allocate_storage", Convert.ToBase64String(der), folder, size));
+        }
+
+        public Task<StorageInfo[]> GetStorage()
+        {
+            return this.client_.call<StorageInfo[]>("devices", this.public_key_id_);
         }
 
         private ChannelMessage decrypt(CryptedChannelMessage message)
@@ -615,13 +619,14 @@ namespace IVySoft.VDS.Client
 
         private async Task<KeyValuePair<FileBlock, BlockInfo>> save_block(byte[] data, int size)
         {
+            var client = await this.get_client();
             var key_data = sha256(data, size);
             var iv_data = new byte[] { 0xa5, 0xbb, 0x9f, 0xce, 0xc2, 0xe4, 0x4b, 0x91, 0xa8, 0xc9, 0x59, 0x44, 0x62, 0x55, 0x90, 0x24 };
 
             var key_data2 = sha256(encrypt_by_aes_256_cbc(key_data, iv_data, data));
             var zipped = deflate(data, size);
             var crypted_data = encrypt_by_aes_256_cbc(key_data2, iv_data, zipped);
-            var result = await this.client_.call<BlockInfo>("upload", Convert.ToBase64String(crypted_data));
+            var result = await client.call<BlockInfo>("upload", Convert.ToBase64String(crypted_data));
             return new KeyValuePair<FileBlock, BlockInfo>(
                 new FileBlock(
                     key_data,

@@ -9,19 +9,20 @@
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="Bool2Visibility" />
         <local:MessageStateToImageConverter x:Key="msgStateToImageConverter" />
+        <BitmapImage UriSource="Images/msgAttach.png" x:Key="msgAttachImage"/>
     </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="150"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <ScrollViewer>
             <ListView ItemsSource="{Binding MessagesList}">
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Horizontal">
-                            <Image Height="32" Width="32" Source="msgUserImage.png" />
+                            <Image Height="32" Width="32" Source="Images/msgUserImage.png" />
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="{Binding Message}" />
@@ -56,24 +57,16 @@
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
-            <Label>Сообщение:</Label>
+            <Button Margin="10" Padding="10" x:Name="AddFileBtn" Click="AddFileBtn_Click">
+                <Image Source="{StaticResource msgAttachImage}" />
+            </Button>
             <TextBox Grid.Column="1" x:Name="MessageEdit"/>
-            <Button Grid.Column="2" Margin="10" Padding="10" x:Name="SendBtn" Click="SendBtn_Click">Отправить</Button>
-            <Label Grid.Row="1" >Файлы:</Label>
-            <ListView Grid.Row="1" Grid.Column="1" x:Name="FilesList">
-                <ListView.ItemTemplate>
-                    <DataTemplate>
-                        <TextBlock >
-                            <Run Text="{Binding Name,Mode=OneWay}"/>(<Run Text="{Binding Length,Mode=OneWay}"/>)
-                        </TextBlock>
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
-            <StackPanel Grid.Row="1" Grid.Column="2">
-                <Button Margin="10" Padding="10" x:Name="AddFileBtn" Click="AddFileBtn_Click" >Добавить</Button>
-            </StackPanel>
+            <Button Grid.Column="2" Margin="10,10,10,10" Padding="10" x:Name="SendBtn" Click="SendBtn_Click">
+                <Image Source="Images/msgSend.png" />
+            </Button>
+            <WrapPanel Grid.Row="1" Grid.Column="1" x:Name="FilesList"/>
         </Grid>
     </Grid>
 </UserControl>

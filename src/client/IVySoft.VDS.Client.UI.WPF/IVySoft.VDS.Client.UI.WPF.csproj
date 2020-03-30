@@ -7,7 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="msgUserImage.png" />
+    <None Remove="Images\msgAttach.png" />
+    <None Remove="Images\msgSend.png" />
+    <None Remove="Images\msgStateDraft.png" />
+    <None Remove="Images\msgStateUploaded.png" />
+    <None Remove="Images\msgUserImage.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -15,11 +19,31 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Images\" />
+    <Resource Include="Images\msgAttach.png">
+      <CopyToOutputDirectory></CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Images\msgSend.png" />
+    <Resource Include="Images\msgStateDraft.png" />
+    <Resource Include="Images\msgStateUploaded.png" />
+    <Resource Include="Images\msgUserImage.png" />
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="msgUserImage.png" />
+    <Compile Update="UIResources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>UIResources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="UIResources.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>UIResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="UIResources.ru-RU.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
   </ItemGroup>
 
 </Project>

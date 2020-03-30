@@ -49,6 +49,7 @@ namespace IVySoft.VDS.Client.UI.WPF
             VdsService.Instance.OnLoginRequired += VdsService_OnLoginRequired;
             VdsService.Instance.OpenConnection();
         }
+
         private void VdsService_OnLoginRequired(object sender, LoginRequiredEventArg arg)
         {
             this.Dispatcher.Invoke(() =>
@@ -133,9 +134,48 @@ namespace IVySoft.VDS.Client.UI.WPF
                 else
                 {
                     this.OnGetChannels(x.Result);
+                    this.CheckStorage();
                 }
             });
         }
+
+        private void CheckStorage()
+        {
+            VdsService.Instance.Api.GetStorage().ContinueWith(x =>
+            {
+                if (x.IsFaulted)
+                {
+                    this.OnError("Ошибка получения параметров хранилища", x.Exception);
+                }
+                else
+                {
+                    if(x.Result.Length == 0)
+                    {
+                        this.AllocateStorage();
+                    }
+                }
+            });
+        }
+
+        private void AllocateStorage()
+        {
+            var folder = System.IO.Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "vds",
+                "home",
+                VdsService.Instance.Api.UserId,
+                "storage");
+            System.IO.Directory.CreateDirectory(folder);
+
+            VdsService.Instance.Api.AllocateStorage(folder, 4L * 1024 * 1024 * 1024).ContinueWith(x =>
+            {
+                if (x.IsFaulted)
+                {
+                    this.OnError("Ошибка создания хранилища", x.Exception);
+                }
+            });
+        }
+
         private void OnGetChannels(ChannelMessage[] result)
         {
             this.Dispatcher.Invoke(() =>
@@ -202,5 +242,11 @@ namespace IVySoft.VDS.Client.UI.WPF
             });
         }
 
+        private void CreateChannel_Executed(object sender, RoutedEventArgs e)
+        {
+            var dlg = new Channel.CreateChannel();
+            dlg.Owner = this;
+            dlg.ShowDialog();
+        }
     }
 }

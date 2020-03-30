@@ -62,14 +62,17 @@ namespace IVySoft.VDS.Client.UI.WPF
 
             foreach (var f in dlg.FileNames)
             {
-                FilesList.Items.Add(new System.IO.FileInfo(f));
+                FilesList.Children.Add(new ucMsgAttachment
+                {
+                    DataContext = new System.IO.FileInfo(f)
+                });
             }
         }
 
         private void SendBtn_Click(object sender, RoutedEventArgs e)
         {
             if (string.IsNullOrWhiteSpace(MessageEdit.Text)
-                && FilesList.Items.Count == 0)
+                && FilesList.Children.Count == 0)
             {
                 return;
             }
@@ -82,8 +85,9 @@ namespace IVySoft.VDS.Client.UI.WPF
             };
 
             var files = new List<FileUploadStream>();
-            foreach (System.IO.FileInfo item in FilesList.Items)
+            foreach (ucMsgAttachment child in FilesList.Children)
             {
+                System.IO.FileInfo item = child.DataContext;
                 var f = new Logic.Model.ChannalMessageFileInfo
                 {
                     Name = System.IO.Path.GetFileName(item.FullName),
@@ -125,8 +129,7 @@ namespace IVySoft.VDS.Client.UI.WPF
                     }
                 });
             MessageEdit.Text = string.Empty;
-            FilesList.Items.Clear();
-
+            FilesList.Children.Clear();
         }
     }
 }
