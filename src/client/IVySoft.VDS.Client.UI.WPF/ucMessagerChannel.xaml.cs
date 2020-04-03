@@ -24,32 +24,31 @@ namespace IVySoft.VDS.Client.UI.WPF
             InitializeComponent();
         }
 
-        private void FileHyperlink_Click(object sender, RoutedEventArgs e)
+        private async void FileHyperlink_Click(object sender, RoutedEventArgs e)
         {
             var target_folder = System.IO.Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
                 "Downloads");
             var fb = (Logic.Model.ChannelMessageFileInfo)((Hyperlink)e.OriginalSource).Tag;
 
-            VdsService.Instance.Dawnload(fb.Info, target_folder).ContinueWith(x =>
+            using (var s = new VdsService())
             {
-                if (x.IsFaulted)
+                try
                 {
-                    ((MainWindow)Application.Current.MainWindow).OnError(
-                        "Ошибка скачивания файла",
-                        x.Exception);
-                }
-                else
-                {
+                    var f = await s.Download(fb.Info, target_folder);
                     new System.Diagnostics.Process
                     {
-                        StartInfo = new System.Diagnostics.ProcessStartInfo(x.Result)
+                        StartInfo = new System.Diagnostics.ProcessStartInfo(f)
                         {
                             UseShellExecute = true
                         }
                     }.Start();
                 }
-            });
+                catch (Exception ex)
+                {
+                    MessageBox.Show(UIUtils.GetErrorMessage(ex), "Ошибка скачивания файла", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
         }
 
         private void AddFileBtn_Click(object sender, RoutedEventArgs e)
@@ -69,7 +68,7 @@ namespace IVySoft.VDS.Client.UI.WPF
             }
         }
 
-        private void SendBtn_Click(object sender, RoutedEventArgs e)
+        private async void SendBtn_Click(object sender, RoutedEventArgs e)
         {
             if (string.IsNullOrWhiteSpace(MessageEdit.Text)
                 && FilesList.Children.Count == 0)
@@ -120,23 +119,24 @@ namespace IVySoft.VDS.Client.UI.WPF
 
             ((MainWindow)Application.Current.MainWindow).DataContext.MessagesList.Add(msgItem);
 
-            VdsService.Instance.Api.UploadFiles(
-                ((MainWindow)Application.Current.MainWindow).DataContext.SelectedChannel,
-                MessageEdit.Text,
-                files.ToArray()).ContinueWith(x =>
+            using (var s = new VdsService())
+            {
+                try
+                {
+                    await s.Api.UploadFiles(
+                        new Api.Channel(((MainWindow)Application.Current.MainWindow).DataContext.SelectedChannel),
+                     MessageEdit.Text,
+                     files.ToArray());
+
+                    msgItem.State = Logic.Model.MessageState.Uploaded;
+                }
+                catch (Exception ex)
                 {
                     msgItem.State = Logic.Model.MessageState.Uploaded;
-                    if (x.IsFaulted)
-                    {
-                        ((MainWindow)Application.Current.MainWindow).OnError(
-                            "Отправка сообщения",
-                            x.Exception);
-                    }
-                    else
-                    {
+                    MessageBox.Show(UIUtils.GetErrorMessage(ex), "Отправка сообщения", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
 
-                    }
-                });
             MessageEdit.Text = string.Empty;
             FilesList.Children.Clear();
         }

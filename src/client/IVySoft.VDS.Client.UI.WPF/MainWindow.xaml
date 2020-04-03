@@ -8,8 +8,7 @@
         WindowStartupLocation="CenterScreen"
         WindowState="Maximized"
         Title="Virtual Dirstributed Storage" Height="450" Width="800"
-        Loaded="Window_Loaded"
-        Closed="Window_Closed">
+        Loaded="Window_Loaded">
     <DockPanel>
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="Создать">

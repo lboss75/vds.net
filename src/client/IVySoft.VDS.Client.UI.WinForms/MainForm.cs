@@ -86,37 +86,6 @@ namespace IVySoft.VDS.Client.UI.WinForms
             }
         }
 
-        private void VdsService_OnLoginRequired(object sender, LoginRequiredEventArg arg)
-        {
-            if (this.InvokeRequired)
-            {
-                this.Invoke(new LoginRequiredDelegate(VdsService_OnLoginRequired), sender, arg);
-            }
-            else
-            {
-                var dlg = new LoginForm();
-                if (dlg.ShowDialog(this) != DialogResult.OK)
-                {
-                    this.Close();
-                    return;
-                }
-
-                this.login = dlg.Login;
-                this.password = dlg.Password;
-                VdsService.Instance.Api.Login(dlg.Login, dlg.Password).ContinueWith(x =>
-                {
-                    if (x.IsFaulted)
-                    {
-                        this.login = string.Empty;
-                        this.OnLoginError(x.Exception);
-                    }
-                    else
-                    {
-                        this.OnLoginSuccessful();
-                    }
-                });
-            }
-        }
 
         private delegate void LoginSuccessfulDelegate();
         private void OnLoginSuccessful()

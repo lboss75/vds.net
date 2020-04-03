@@ -39,46 +39,37 @@ namespace IVySoft.VDS.Client.UI.WPF
             passwordEdit.Password = this.Password;
         }
 
-        private void registerBtn_Click(object sender, RoutedEventArgs e)
+        private async void registerBtn_Click(object sender, RoutedEventArgs e)
         {
             var dlg = new RegisterDlg();
-            if(true == dlg.ShowDialog())
+            if (true == dlg.ShowDialog())
             {
                 var save_cursor = Mouse.OverrideCursor;
                 Mouse.OverrideCursor = Cursors.Wait;
-                VdsService.Instance.Api.CreateUser(dlg.Login, dlg.Password).ContinueWith(x =>
+                using (var s = new VdsService())
                 {
-                    Dispatcher.Invoke(() =>
+                    try
+                    {
+                        await s.Api.CreateUser(dlg.Login, dlg.Password);
+
+                        Mouse.OverrideCursor = save_cursor;
+                        this.Login = dlg.Login;
+                        this.Password = dlg.Password;
+                        this.DialogResult = true;
+                    }
+                    catch (Exception ex)
                     {
                         Mouse.OverrideCursor = save_cursor;
 
-                        if (x.IsFaulted)
-                        {
-                            this.OnCreateUserError(x.Exception);
-                        }
-                        else
-                        {
-                            this.Login = dlg.Login;
-                            this.Password = dlg.Password;
-                            this.DialogResult = true;
-                        }
-                    });
-                });
+                        MessageBox.Show(
+                            this,
+                            UIUtils.GetErrorMessage(ex),
+                            this.Title,
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Error);
+                    }
+                }
             }
         }
-
-        private void OnCreateUserError(Exception ex)
-        {
-            this.Dispatcher.Invoke(() =>
-            {
-                MessageBox.Show(
-                    this,
-                    UIUtils.GetErrorMessage(ex),
-                    this.Title,
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-            });
-        }
-
     }
 }

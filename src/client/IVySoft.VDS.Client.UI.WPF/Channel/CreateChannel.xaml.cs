@@ -24,28 +24,28 @@ namespace IVySoft.VDS.Client.UI.WPF.Channel
 
         public Transactions.ChannelCreateTransaction CreatedChannel { get; private set; }
 
-        private void createBtn_Click(object sender, RoutedEventArgs e)
+        private async void createBtn_Click(object sender, RoutedEventArgs e)
         {
             var original_mouse = Mouse.OverrideCursor;
             Mouse.OverrideCursor = Cursors.Wait;
-            Logic.VdsService.Instance.Api.create_channel(
-                Transactions.CbannelTypes.notes_channel,
-                this.nameEdit.Text).ContinueWith(x =>
+
+            using(var s = new Logic.VdsService())
+            {
+                try
                 {
-                    this.Dispatcher.Invoke(() =>
-                    {
-                        Mouse.OverrideCursor = original_mouse;
-                        if (x.IsFaulted)
-                        {
-                            MessageBox.Show(this, Logic.UIUtils.GetErrorMessage(x.Exception), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
-                        }
-                        else
-                        {
-                            this.CreatedChannel = x.Result;
-                            this.DialogResult = true;
-                        }
-                    });
-                });
+                    this.CreatedChannel = await s.Api.create_channel(
+                        ((MainWindow)Application.Current.MainWindow).User,
+                        Api.ChannelTypes.notes_channel,
+                        this.nameEdit.Text);
+                    this.DialogResult = true;
+                }
+                catch (Exception ex)
+                {
+                    Mouse.OverrideCursor = original_mouse;
+                    MessageBox.Show(this, Logic.UIUtils.GetErrorMessage(ex), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                Mouse.OverrideCursor = original_mouse;
+            }
         }
     }
 }

@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace IVySoft.VDS.Client.Transactions
+namespace IVySoft.VDS.Client.Api
 {
-    public static class CbannelTypes
+    public static class ChannelTypes
     {
         public static string personal_channel = "core.personal";
         public static string notes_channel = "core.notes";

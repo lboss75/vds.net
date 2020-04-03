@@ -40,8 +40,8 @@ namespace IVySoft.VDS.Client.Cmd
                 ServiceUri = "ws://" + opts.Server + "/api/ws"
             }))
             {
-                api.Login(opts.Login, opts.Password).Wait();
-                api.AllocateStorage(opts.DestinationPath, opts.Length).Wait();
+                var user = api.Login(opts.Login, opts.Password).Result;
+                api.AllocateStorage(user, opts.DestinationPath, opts.Length).Wait();
             }
 
             return 0;
@@ -54,10 +54,11 @@ namespace IVySoft.VDS.Client.Cmd
                 ServiceUri = "ws://" + opts.Server + "/api/ws"
             }))
             {
-                api.Login(opts.Login, opts.Password).Wait();
-                var channel = api.GetChannels().Result
+                var user  = api.Login(opts.Login, opts.Password).Result;
+                var channel = api.GetChannels(user).Result
                     .Where(x => x is Transactions.ChannelCreateTransaction)
                     .Select(x => (Transactions.ChannelCreateTransaction)x)
+                    .Select(x => new Api.Channel(x))
                     .SingleOrDefault(x => x.Id == opts.ChannelId);
                 if(channel == null)
                 {
@@ -205,9 +206,9 @@ namespace IVySoft.VDS.Client.Cmd
                 ServiceUri = "ws://" + opts.Server + "/api/ws"
             }))
             {
-                api.Login(opts.Login, opts.Password).Wait();
+                var user = api.Login(opts.Login, opts.Password).Result;
 
-                return api.GetChannels().Result;
+                return api.GetChannels(user).Result;
             }
         }
 
@@ -218,8 +219,11 @@ namespace IVySoft.VDS.Client.Cmd
                 switch (message)
                 {
                     case Transactions.ChannelCreateTransaction msg:
-                        Console.WriteLine($"{msg.Id}|{msg.Type}|{msg.Name}");
-                        break;
+                        {
+                            var channel = new Api.Channel(msg);
+                            Console.WriteLine($"{channel.Id}|{channel.Type}|{channel.Name}");
+                            break;
+                        }
                 }
             }
 

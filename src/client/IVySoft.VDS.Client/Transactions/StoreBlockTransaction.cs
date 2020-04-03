@@ -28,7 +28,7 @@ namespace IVySoft.VDS.Client.Transactions
                     byte[][] replicas,
                     RSACryptoServiceProvider user_key)
         {
-            this.owner_id_ = VdsApi.public_key_fingerprint(user_key);
+            this.owner_id_ = Crypto.CryptoUtils.public_key_fingerprint(user_key);
             this.object_id_ = object_id;
             this.object_size_ = object_size;
             this.replica_size_ = replica_size;

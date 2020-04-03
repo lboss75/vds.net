@@ -52,7 +52,7 @@ namespace IVySoft.VDS.Client.Cmd.Tests
                     switch (message)
                     {
                         case Transactions.ChannelCreateTransaction msg:
-                            channel_id = msg.Id;
+                            channel_id = new Api.Channel(msg).Id;
                             break;
                     }
                     if (!string.IsNullOrEmpty(channel_id))

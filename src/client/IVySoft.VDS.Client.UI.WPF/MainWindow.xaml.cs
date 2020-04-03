@@ -1,4 +1,5 @@
-﻿using IVySoft.VDS.Client.UI.Logic;
+﻿using IVySoft.VDS.Client.Api;
+using IVySoft.VDS.Client.UI.Logic;
 using IVySoft.VDS.Client.UI.Logic.Model;
 using System;
 using System.Collections.Generic;
@@ -22,14 +23,15 @@ namespace IVySoft.VDS.Client.UI.WPF
     /// </summary>
     public partial class MainWindow : Window
     {
-        private string login;
-        private string password;
+        private ThisUser user_;
 
         public MainWindow()
         {
             this.DataContext = new MainWindowDataContext();
             InitializeComponent();
         }
+
+        internal ThisUser User { get => this.user_; }
 
         internal new MainWindowDataContext DataContext
         {
@@ -43,138 +45,49 @@ namespace IVySoft.VDS.Client.UI.WPF
             }
         }
 
-        private void Window_Loaded(object sender, RoutedEventArgs e)
+        private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            VdsService.Instance.ErrorHandler += this.ApiErrorHandler;
-            VdsService.Instance.OnLoginRequired += VdsService_OnLoginRequired;
-            VdsService.Instance.OpenConnection();
-        }
-
-        private void VdsService_OnLoginRequired(object sender, LoginRequiredEventArg arg)
-        {
-            this.Dispatcher.Invoke(() =>
+            for (; ; )
             {
                 var dlg = new LoginWindow();
+                dlg.Owner = this;
                 if (dlg.ShowDialog() != true)
                 {
                     this.Close();
                     return;
                 }
 
-                this.login = dlg.Login;
-                this.password = dlg.Password;
-                VdsService.Instance.Api.Login(dlg.Login, dlg.Password).ContinueWith(x =>
+                using (var s = new VdsService())
                 {
-                    if (x.IsFaulted)
+                    try
                     {
-                        this.login = string.Empty;
-                        this.OnLoginError(x.Exception);
-                    }
-                    else
-                    {
-                        this.OnLoginSuccessful();
-                    }
-                });
-            });
-        }
+                        this.user_ = await s.Api.Login(dlg.Login, dlg.Password);
+                        var devices = await s.Api.GetStorage(this.user_);
+                        if(devices.Length == 0)
+                        {
+                            var folder = System.IO.Path.Combine(
+                                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                                "vds",
+                                "home",
+                                this.user_.Id,
+                                "storage");
+                            System.IO.Directory.CreateDirectory(folder);
 
-        private void ApiErrorHandler(Exception ex)
-        {
-            if (!string.IsNullOrWhiteSpace(this.login) && null != VdsService.Instance.Api)
-            {
-                VdsService.Instance.Api.Login(this.login, this.password).ContinueWith(x =>
-                {
-                    if (x.IsFaulted)
-                    {
-                        this.login = string.Empty;
-                        this.OnLoginError(x.Exception);
+                            await s.Api.AllocateStorage(this.user_, folder, 4L * 1024 * 1024 * 1024);
+                            this.OnGetChannels(await s.Api.GetChannels(this.user_));
+
+                        }
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        this.OnLoginSuccessful();
+                        MessageBox.Show(this, UIUtils.GetErrorMessage(ex), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+                        continue;
                     }
-                });
+                }
+                break;
             }
         }
 
-        private void OnLoginError(Exception ex)
-        {
-            this.Dispatcher.Invoke(() =>
-            {
-                MessageBox.Show(
-                    this,
-                    UIUtils.GetErrorMessage(ex),
-                    "Ошибка входа",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-
-                this.VdsService_OnLoginRequired(this, new LoginRequiredEventArg());
-            });
-        }
-        internal void OnError(string title, Exception ex)
-        {
-            this.Dispatcher.Invoke(() =>
-            {
-                MessageBox.Show(
-                    this,
-                    UIUtils.GetErrorMessage(ex),
-                    title,
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-            });
-        }
-        private void OnLoginSuccessful()
-        {
-            VdsService.Instance.Api.GetChannels().ContinueWith(x =>
-            {
-                if (x.IsFaulted)
-                {
-                    this.OnError("Ошибка получения списка каналов", x.Exception);
-                }
-                else
-                {
-                    this.OnGetChannels(x.Result);
-                    this.CheckStorage();
-                }
-            });
-        }
-
-        private void CheckStorage()
-        {
-            VdsService.Instance.Api.GetStorage().ContinueWith(x =>
-            {
-                if (x.IsFaulted)
-                {
-                    this.OnError("Ошибка получения параметров хранилища", x.Exception);
-                }
-                else
-                {
-                    if(x.Result.Length == 0)
-                    {
-                        this.AllocateStorage();
-                    }
-                }
-            });
-        }
-
-        private void AllocateStorage()
-        {
-            var folder = System.IO.Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "vds",
-                "home",
-                VdsService.Instance.Api.UserId,
-                "storage");
-            System.IO.Directory.CreateDirectory(folder);
-
-            VdsService.Instance.Api.AllocateStorage(folder, 4L * 1024 * 1024 * 1024).ContinueWith(x =>
-            {
-                if (x.IsFaulted)
-                {
-                    this.OnError("Ошибка создания хранилища", x.Exception);
-                }
-            });
-        }
 
         private void OnGetChannels(ChannelMessage[] result)
         {
@@ -195,12 +108,7 @@ namespace IVySoft.VDS.Client.UI.WPF
             });
         }
 
-        private void Window_Closed(object sender, EventArgs e)
-        {
-            VdsService.Instance.Stop();
-        }
-
-        private void ChannelList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private async void ChannelList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             this.DataContext.MessagesList.Clear();
 
@@ -213,17 +121,17 @@ namespace IVySoft.VDS.Client.UI.WPF
             this.DataContext.SelectedChannel = (Transactions.ChannelCreateTransaction)ChannelList.SelectedItem;
             if (null != this.DataContext.SelectedChannel)
             {
-                VdsService.Instance.Api.GetChannelMessages(this.DataContext.SelectedChannel).ContinueWith(x =>
+                using (var s = new VdsService())
                 {
-                    if (x.IsFaulted)
+                    try
                     {
-                        this.OnError("Ошибка получения сообщений", x.Exception);
+                        this.WriteChannelHistory(await s.Api.GetChannelMessages(new Api.Channel(this.DataContext.SelectedChannel)));
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        this.WriteChannelHistory(x.Result);
+                        MessageBox.Show(this, UIUtils.GetErrorMessage(ex), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
                     }
-                });
+                }
             }
         }
         private void WriteChannelHistory(ChannelMessage[] result)
