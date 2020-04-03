@@ -549,13 +549,20 @@ namespace IVySoft.VDS.Client
                         throw new Exception($"File {inputFile.SystemPath} has been changed during upload process");
                     }
 
-                    files.Add(new Transactions.FileInfo(
+                    var info = new Transactions.FileInfo(
                         inputFile.Name,
                         "application/octet-stream",
                         size,
                         provider.Hash,
                         blocks.ToArray()
-                    ));
+                    );
+
+                    if (null != inputFile.UploadedCallback)
+                    {
+                        inputFile.UploadedCallback(info);
+                    }
+
+                    files.Add(info);
                 }
             }
 
@@ -571,10 +578,51 @@ namespace IVySoft.VDS.Client
                 Convert.ToBase64String(playload.ToArray()));
         }
 
+        public async Task<Transactions.ChannelCreateTransaction> create_channel(
+            string channel_type,
+            string channel_name) {
+
+            var channel_read_key = new RSACryptoServiceProvider(4096);
+            var channel_write_key = new RSACryptoServiceProvider(4096);
+
+            var playload = new System.IO.MemoryStream();
+            var channel = new Transactions.ChannelCreateTransaction
+            (
+                channel_id: public_key_fingerprint(channel_write_key),
+                channel_type: channel_type,
+                channel_name: channel_name,
+                read_public_key: public_key_to_der(channel_read_key),
+                read_private_key: private_key_to_der(channel_read_key),
+                write_public_key: public_key_to_der(channel_write_key),
+                write_private_key: private_key_to_der(channel_write_key)
+            );
+
+            byte[] message;
+            using(var ms = new System.IO.MemoryStream())
+            {
+                channel.Serialize(ms);
+                message = ms.ToArray();
+
+            }
+            var cripted_data = channel_encrypt(
+                this.public_key_id_,
+                this.read_keys_[this.public_key_id_],
+                this.write_keys_[this.public_key_id_],
+                message);
+            playload.Write(cripted_data, 0, cripted_data.Length);
+
+            var transaction_id = await this.client_.call<string>(
+                "broadcast",
+                Convert.ToBase64String(playload.ToArray()));
+
+            return channel;
+        }
         private byte[] channel_encrypt(Transactions.ChannelCreateTransaction channel_data, byte[] data)
         {
-            var write_key = channel_data.WriteKey;
-
+            return this.channel_encrypt(channel_data.Id, channel_data.ReadKey, channel_data.WriteKey, data);
+        }
+        private byte[] channel_encrypt(string channel_id, KeyPair read_key, KeyPair write_key, byte[] data)
+        {
             if (null == write_key)
             {
                 throw new Exception("Channel is read only");
@@ -590,8 +638,6 @@ namespace IVySoft.VDS.Client
 
             var crypted_data = encrypt_by_aes_256_cbc(key, iv, data);
 
-            var read_key = channel_data.ReadKey;
-
             byte[] crypted_key;
             using (var ms = new System.IO.MemoryStream())
             {
@@ -604,7 +650,7 @@ namespace IVySoft.VDS.Client
             using (var ms = new System.IO.MemoryStream())
             { 
                 ms.WriteByte(99);
-                ms.push_data(Convert.FromBase64String(channel_data.Id));
+                ms.push_data(Convert.FromBase64String(channel_id));
                 ms.push_data(public_key_fingerprint(read_key.PublicKey));
                 ms.push_data(public_key_fingerprint(write_key.PublicKey));
                 ms.push_data(crypted_key);

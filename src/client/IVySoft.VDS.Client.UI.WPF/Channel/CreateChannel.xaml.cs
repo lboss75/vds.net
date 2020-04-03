@@ -22,10 +22,30 @@ namespace IVySoft.VDS.Client.UI.WPF.Channel
             InitializeComponent();
         }
 
+        public Transactions.ChannelCreateTransaction CreatedChannel { get; private set; }
+
         private void createBtn_Click(object sender, RoutedEventArgs e)
         {
-            Logic.VdsService.Instance.Api.Ch(this.DataContext.SelectedChannel).ContinueWith(x =>
-
+            var original_mouse = Mouse.OverrideCursor;
+            Mouse.OverrideCursor = Cursors.Wait;
+            Logic.VdsService.Instance.Api.create_channel(
+                Transactions.CbannelTypes.notes_channel,
+                this.nameEdit.Text).ContinueWith(x =>
+                {
+                    this.Dispatcher.Invoke(() =>
+                    {
+                        Mouse.OverrideCursor = original_mouse;
+                        if (x.IsFaulted)
+                        {
+                            MessageBox.Show(this, Logic.UIUtils.GetErrorMessage(x.Exception), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+                        }
+                        else
+                        {
+                            this.CreatedChannel = x.Result;
+                            this.DialogResult = true;
+                        }
+                    });
+                });
         }
     }
 }

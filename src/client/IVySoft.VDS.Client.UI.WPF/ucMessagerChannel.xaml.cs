@@ -29,9 +29,9 @@ namespace IVySoft.VDS.Client.UI.WPF
             var target_folder = System.IO.Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
                 "Downloads");
-            var fb = (Transactions.FileInfo)((Hyperlink)e.OriginalSource).Tag;
+            var fb = (Logic.Model.ChannelMessageFileInfo)((Hyperlink)e.OriginalSource).Tag;
 
-            VdsService.Instance.Dawnload(fb, target_folder).ContinueWith(x =>
+            VdsService.Instance.Dawnload(fb.Info, target_folder).ContinueWith(x =>
             {
                 if (x.IsFaulted)
                 {
@@ -80,7 +80,7 @@ namespace IVySoft.VDS.Client.UI.WPF
             var msgItem = new Logic.Model.ChannelMessage
             {
                 Message = MessageEdit.Text,
-                Files = new System.Collections.ObjectModel.ObservableCollection<Logic.Model.ChannalMessageFileInfo>(),
+                Files = new System.Collections.ObjectModel.ObservableCollection<Logic.Model.ChannelMessageFileInfo>(),
                 State = Logic.Model.MessageState.Draft
             };
 
@@ -88,13 +88,17 @@ namespace IVySoft.VDS.Client.UI.WPF
             foreach (ucMsgAttachment child in FilesList.Children)
             {
                 System.IO.FileInfo item = child.DataContext;
-                var f = new Logic.Model.ChannalMessageFileInfo
-                {
-                    Name = System.IO.Path.GetFileName(item.FullName),
-                    Lenght = item.Length,
-                    InProgress = true,
-                    Progress = 0
-                };
+                var fi = new Transactions.FileInfo(
+                    name: System.IO.Path.GetFileName(item.FullName),
+                    mime_type: string.Empty,
+                    size: item.Length,
+                    file_id: null,
+                    file_blocks: null);
+
+                var f = new Logic.Model.ChannelMessageFileInfo(fi);
+                f.InProgress = true;
+                f.Progress = 0;
+
                 msgItem.Files.Add(f);
 
                 files.Add(new FileUploadStream
@@ -105,6 +109,11 @@ namespace IVySoft.VDS.Client.UI.WPF
                     {
                         f.Progress = x;
                         return true;
+                    }),
+                    UploadedCallback = (x =>
+                    {
+                        f.Info = x;
+                        f.InProgress = false;
                     })
                 });
             }

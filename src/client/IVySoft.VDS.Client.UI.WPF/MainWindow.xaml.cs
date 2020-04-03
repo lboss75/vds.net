@@ -246,7 +246,11 @@ namespace IVySoft.VDS.Client.UI.WPF
         {
             var dlg = new Channel.CreateChannel();
             dlg.Owner = this;
-            dlg.ShowDialog();
+            if(true == dlg.ShowDialog())
+            {
+                this.DataContext.ChannelList.Add(dlg.CreatedChannel);
+                this.ChannelList.SelectedItem = dlg.CreatedChannel;
+            }
         }
     }
 }

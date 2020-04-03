@@ -20,13 +20,8 @@ namespace IVySoft.VDS.Client.UI.Logic.Model
         public ChannelMessage(UserMessageTransaction msg)
         {
             this.Message = msg.Message;
-            this.Files = new ObservableCollection<ChannalMessageFileInfo>(
-                msg.Files.Select(x => new ChannalMessageFileInfo
-                {
-                    Name = x.Name,
-                    InProgress = false,
-                    Lenght = x.Size
-                }));
+            this.Files = new ObservableCollection<ChannelMessageFileInfo>(
+                msg.Files.Select(x => new ChannelMessageFileInfo(x)));
         }
 
         public string Message
@@ -43,7 +38,7 @@ namespace IVySoft.VDS.Client.UI.Logic.Model
                 }
             }
         }
-        public ObservableCollection<ChannalMessageFileInfo> Files { get; set; }
+        public ObservableCollection<ChannelMessageFileInfo> Files { get; set; }
         public MessageState State
         {
             get => state_; set

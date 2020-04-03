@@ -14,4 +14,8 @@
     <ProjectReference Include="..\..\..\..\vplatform\src\IVySoft.VPlatform.Network\IVySoft.VPlatform.Network.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Api\" />
+  </ItemGroup>
+
 </Project>

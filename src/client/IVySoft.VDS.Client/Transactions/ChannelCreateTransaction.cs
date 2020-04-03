@@ -86,6 +86,17 @@ namespace IVySoft.VDS.Client.Transactions
             }
         }
 
+        internal void Serialize(System.IO.Stream ms)
+        {
+            ms.WriteByte(MessageId);
+            ms.push_data(this.channel_id);
+            ms.push_string(this.channel_type);
+            ms.push_string(this.channel_name);
+            ms.push_data(this.read_public_key);
+            ms.push_data(this.read_private_key);
+            ms.push_data(this.write_public_key);
+            ms.push_data(this.write_private_key);
+        }
         internal static ChannelMessage Deserialize(Stream stream)
         {
             var channel_id = stream.pop_data();
