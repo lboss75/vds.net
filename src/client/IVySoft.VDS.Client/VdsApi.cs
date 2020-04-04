@@ -80,7 +80,8 @@ namespace IVySoft.VDS.Client
 
         public async Task<ChannelMessage[]> GetChannelMessages(Api.Channel channel)
         {
-            var messages = await this.client_.call<CryptedChannelMessage[]>("get_channel_messages", channel.Id);
+            var client = await this.get_client();
+            var messages = await client.call<CryptedChannelMessage[]>("get_channel_messages", channel.Id);
             return messages.Select(x => channel.decrypt(x)).ToArray();
         }
 
@@ -314,7 +315,8 @@ namespace IVySoft.VDS.Client
             var cripted_data = user.PersonalChannel.channel_encrypt(message);
             playload.Write(cripted_data, 0, cripted_data.Length);
 
-            var transaction_id = await this.client_.call<string>(
+            var client = await this.get_client();
+            var transaction_id = await client.call<string>(
                 "broadcast",
                 Convert.ToBase64String(playload.ToArray()));
 
