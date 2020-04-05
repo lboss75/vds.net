@@ -175,7 +175,7 @@ namespace IVySoft.VDS.Client.Cmd
                 {
                     foreach (var file_block in file_info.Blocks)
                     {
-                        var result = api.Dawnload(file_block).Result;
+                        var result = api.Download(file_block).Result;
                         tmp_file.Write(result, 0, result.Length);
                     }
                 }

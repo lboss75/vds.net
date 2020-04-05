@@ -160,5 +160,12 @@ namespace IVySoft.VDS.Client.UI.WPF
                 this.ChannelList.SelectedItem = dlg.CreatedChannel;
             }
         }
+
+        private void ViewWallet(object sender, RoutedEventArgs e)
+        {
+            var dlg = new WalletsWindow();
+            dlg.Owner = this;
+            dlg.ShowDialog();
+        }
     }
 }

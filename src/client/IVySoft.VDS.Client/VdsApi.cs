@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Cryptography.KeyDerivation;
+﻿using IVySoft.VDS.Client.Api;
+using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using Newtonsoft.Json;
 using Org.BouncyCastle.Asn1;
 using Org.BouncyCastle.Asn1.Pkcs;
@@ -66,6 +67,31 @@ namespace IVySoft.VDS.Client
             }
         }
 
+        public async Task<IEnumerable<Wallet>> GetWallets(ThisUser user)
+        {
+            var result = new List<Wallet>();
+            var client = await this.get_client();
+            var messages = await client.call<CryptedChannelMessage[]>("get_channel_messages", user.Id);
+            foreach(var message in messages.Select(x => user.PersonalChannel.decrypt(x)))
+            {
+                switch (message)
+                {
+                    case Transactions.CreateWalletMessage msg:
+                        {
+                            result.Add(new Wallet(msg));
+                            break;
+                        }
+                }
+            }
+
+            return result;
+        }
+        public async Task<IEnumerable<WalletBalance>> GetBalance(Wallet wallet)
+        {
+            var messages = await this.client_.call<Dto.WalletBalanceMessage[]>("balance", wallet.Id);
+            return messages.Select(x => new WalletBalance(x));
+        }
+
         public async Task<string[]> get_sync_state()
         {
             var client = await this.get_client();
@@ -110,7 +136,7 @@ namespace IVySoft.VDS.Client
         }
 
 
-        public async Task<byte[]> Dawnload(FileBlock file_block)
+        public async Task<byte[]> Download(FileBlock file_block)
         {
             var replicas = await this.client_.call<LookingBlockResponse>("looking_block", file_block.BlockId);
             var result = await this.client_.call<string>("download", replicas.replicas);

@@ -140,6 +140,10 @@ namespace IVySoft.VDS.Client.Api
                         {
                             return Transactions.UserMessageTransaction.Deserialize(stream);
                         }
+                    case Transactions.CreateWalletMessage.MessageId:
+                        {
+                            return Transactions.CreateWalletMessage.Deserialize(stream);
+                        }
                 }
 
                 throw new Exception($"Invalid message {message_id}");
