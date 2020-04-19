@@ -1,6 +1,6 @@
 ﻿using System.Security.Cryptography;
 
-namespace IVySoft.VDS.Client
+namespace IVySoft.VDS.Client.Crypto
 {
     public class KeyPair
     {

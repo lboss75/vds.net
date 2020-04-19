@@ -1,4 +1,7 @@
 ﻿using CommandLine;
+using IVySoft.VDS.Client.Api;
+using IVySoft.VDS.Client.Transactions;
+using IVySoft.VDS.Client.Transactions.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -56,32 +59,24 @@ namespace IVySoft.VDS.Client.Cmd
             {
                 var user  = api.Login(opts.Login, opts.Password).Result;
                 var channel = api.GetChannels(user).Result
-                    .Where(x => x is Transactions.ChannelCreateTransaction)
-                    .Select(x => (Transactions.ChannelCreateTransaction)x)
-                    .Select(x => new Api.Channel(x))
                     .SingleOrDefault(x => x.Id == opts.ChannelId);
                 if(channel == null)
                 {
                     throw new Exception($"Channel {opts.ChannelId} not found");
                 }
 
-                var storage_files = new Dictionary<string, List<Transactions.FileInfo>>();
+                var storage_files = new Dictionary<string, List<ChannelMessageFileInfo>>();
                 foreach (var message in api.GetChannelMessages(channel).Result)
                 {
-                    switch (message)
+                    foreach (var f in message.Files)
                     {
-                        case Transactions.UserMessageTransaction msg:
-                            foreach (var f in msg.Files)
-                            {
-                                List<Transactions.FileInfo> versions;
-                                if (!storage_files.TryGetValue(f.Name, out versions))
-                                {
-                                    versions = new List<Transactions.FileInfo>();
-                                    storage_files.Add(f.Name, versions);
-                                }
-                                versions.Add(f);
-                            }
-                            break;
+                        List<ChannelMessageFileInfo> versions;
+                        if (!storage_files.TryGetValue(f.Name, out versions))
+                        {
+                            versions = new List<ChannelMessageFileInfo>();
+                            storage_files.Add(f.Name, versions);
+                        }
+                        versions.Add(f);
                     }
                 }
 
@@ -116,9 +111,9 @@ namespace IVySoft.VDS.Client.Cmd
             }
         }
 
-        private static bool IsNewFile(VdsApi api, FileUploadStream f, Dictionary<string, List<Transactions.FileInfo>> storage_files)
+        private static bool IsNewFile(VdsApi api, FileUploadStream f, Dictionary<string, List<ChannelMessageFileInfo>> storage_files)
         {
-            List<Transactions.FileInfo> storageFiles;
+            List<ChannelMessageFileInfo> storageFiles;
             storage_files.TryGetValue(f.Name, out storageFiles);
 
 
@@ -153,7 +148,7 @@ namespace IVySoft.VDS.Client.Cmd
             }
         }
 
-        private static void DownloadFile(VdsApi api, string file_name, Transactions.FileInfo file_info)
+        private static void DownloadFile(VdsApi api, string file_name, ChannelMessageFileInfo file_info)
         {
             if (System.IO.File.Exists(file_name))
             {
@@ -199,7 +194,7 @@ namespace IVySoft.VDS.Client.Cmd
                 }
             }
         }
-        public static ChannelMessage[] GetChannels(ChannelsOptions opts)
+        public static Api.Channel[] GetChannels(ChannelsOptions opts)
         {
             using (VdsApi api = new VdsApi(new VdsApiConfig
             {
@@ -214,17 +209,9 @@ namespace IVySoft.VDS.Client.Cmd
 
         public static int RunAddAndReturnExitCode(ChannelsOptions opts)
         {
-            foreach (var message in GetChannels(opts))
+            foreach (var channel in GetChannels(opts))
             {
-                switch (message)
-                {
-                    case Transactions.ChannelCreateTransaction msg:
-                        {
-                            var channel = new Api.Channel(msg);
-                            Console.WriteLine($"{channel.Id}|{channel.Type}|{channel.Name}");
-                            break;
-                        }
-                }
+                Console.WriteLine($"{channel.Id}|{channel.Type}|{channel.Name}");
             }
 
             return 0;

@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:IVySoft.VDS.Client.UI.WPF.Channel"
         mc:Ignorable="d"
+        WindowStartupLocation="CenterScreen"
         Title="Создать канал" Height="100" Width="400">
     <Grid>
         <Grid.ColumnDefinitions>

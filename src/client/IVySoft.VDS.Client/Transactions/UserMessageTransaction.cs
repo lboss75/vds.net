@@ -1,10 +1,11 @@
-﻿using System;
+﻿using IVySoft.VDS.Client.Transactions.Data;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace IVySoft.VDS.Client.Transactions
 {
-    public class UserMessageTransaction : ChannelMessage
+    internal class UserMessageTransaction : ChannelMessage
     {
         public const int MessageId = 97;
 

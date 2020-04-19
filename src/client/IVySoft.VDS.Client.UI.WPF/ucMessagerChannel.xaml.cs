@@ -1,4 +1,5 @@
-﻿using IVySoft.VDS.Client.UI.Logic;
+﻿using IVySoft.VDS.Client.Transactions.Data;
+using IVySoft.VDS.Client.UI.Logic;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -87,14 +88,7 @@ namespace IVySoft.VDS.Client.UI.WPF
             foreach (ucMsgAttachment child in FilesList.Children)
             {
                 System.IO.FileInfo item = child.DataContext;
-                var fi = new Transactions.FileInfo(
-                    name: System.IO.Path.GetFileName(item.FullName),
-                    mime_type: string.Empty,
-                    size: item.Length,
-                    file_id: null,
-                    file_blocks: null);
-
-                var f = new Logic.Model.ChannelMessageFileInfo(fi);
+                var f = new Logic.Model.ChannelMessageFileInfo(System.IO.Path.GetFileName(item.FullName), item.Length);
                 f.InProgress = true;
                 f.Progress = 0;
 
@@ -123,8 +117,7 @@ namespace IVySoft.VDS.Client.UI.WPF
             {
                 try
                 {
-                    await s.Api.UploadFiles(
-                        new Api.Channel(((MainWindow)Application.Current.MainWindow).DataContext.SelectedChannel),
+                    await s.Api.UploadFiles(((MainWindow)Application.Current.MainWindow).DataContext.SelectedChannel,
                      MessageEdit.Text,
                      files.ToArray());
 

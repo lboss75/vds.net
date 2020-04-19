@@ -22,7 +22,7 @@ namespace IVySoft.VDS.Client.UI.WPF.Channel
             InitializeComponent();
         }
 
-        public Transactions.ChannelCreateTransaction CreatedChannel { get; private set; }
+        public Api.Channel CreatedChannel { get; private set; }
 
         private async void createBtn_Click(object sender, RoutedEventArgs e)
         {

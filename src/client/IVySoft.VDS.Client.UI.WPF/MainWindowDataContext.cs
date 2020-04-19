@@ -6,8 +6,8 @@ namespace IVySoft.VDS.Client.UI.WPF
 {
     internal class MainWindowDataContext
     {
-        public ObservableCollection<Transactions.ChannelCreateTransaction> ChannelList { get; set; } = new ObservableCollection<Transactions.ChannelCreateTransaction>();
+        public ObservableCollection<Api.Channel> ChannelList { get; set; } = new ObservableCollection<Api.Channel>();
         public ObservableCollection<Logic.Model.ChannelMessage> MessagesList { get; set; } = new ObservableCollection<Logic.Model.ChannelMessage>();
-        public ChannelCreateTransaction SelectedChannel { get; internal set; }
+        public Api.Channel SelectedChannel { get; internal set; }
     }
 }

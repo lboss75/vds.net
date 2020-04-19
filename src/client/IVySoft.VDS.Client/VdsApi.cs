@@ -1,4 +1,6 @@
 ﻿using IVySoft.VDS.Client.Api;
+using IVySoft.VDS.Client.Transactions;
+using IVySoft.VDS.Client.Transactions.Data;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using Newtonsoft.Json;
 using Org.BouncyCastle.Asn1;
@@ -37,7 +39,8 @@ namespace IVySoft.VDS.Client
             var client = await this.get_client();
             var user_key = new RSACryptoServiceProvider(4096);
             
-            var profile_data = new Transactions.UserProfile {
+            var profile_data = new UserProfile
+            {
                 password_hash = Crypto.CryptoUtils.sha256(Encoding.UTF8.GetBytes(password)),
                 user_private_key = Crypto.CryptoUtils.private_key_to_der(user_key, password)
             }.Serialize();
@@ -98,18 +101,25 @@ namespace IVySoft.VDS.Client
             return await client.call<string[]>("log_head");
         }
 
-        public async Task<ChannelMessage[]> GetChannels(Api.ThisUser user)
+        public async Task<Channel[]> GetChannels(Api.ThisUser user)
         {
             var messages = await this.client_.call<CryptedChannelMessage[]>("get_channel_messages", user.Id);
-            return messages.Select(x => user.PersonalChannel.decrypt(x)).ToArray();
+            return messages.Select(x => user.PersonalChannel.decrypt(x)).OfType<ChannelCreateTransaction>().Select(x => new Channel(x)).ToArray();
         }
 
-        public async Task<ChannelMessage[]> GetChannelMessages(Api.Channel channel)
+        public async Task<Api.ChannelMessage[]> GetChannelMessages(Api.Channel channel)
         {
             var client = await this.get_client();
             var messages = await client.call<CryptedChannelMessage[]>("get_channel_messages", channel.Id);
-            return messages.Select(x => channel.decrypt(x)).ToArray();
+            return messages.Select(x => channel.decrypt(x)).OfType<UserMessageTransaction>().Select(x => new Api.ChannelMessage(x)).ToArray();
         }
+
+        //public async Task<ChannelMessage[]> GetChannelMessages(Api.Channel channel)
+        //{
+        //    var client = await this.get_client();
+        //    var messages = await client.call<CryptedChannelMessage[]>("get_channel_messages", channel.Id);
+        //    return messages.Select(x => channel.decrypt(x)).ToArray();
+        //}
 
         public async Task<byte[]> AllocateStorage(Api.ThisUser user, string folder, long size)
         {
@@ -135,8 +145,12 @@ namespace IVySoft.VDS.Client
             return this.client_.call<StorageInfo[]>("devices", user.Id);
         }
 
+        public Task<byte[]> Download(ChannelMessageFileBlock block)
+        {
+            return this.Download(block.Data);
+        }
 
-        public async Task<byte[]> Download(FileBlock file_block)
+        private async Task<byte[]> Download(FileBlock file_block)
         {
             var replicas = await this.client_.call<LookingBlockResponse>("looking_block", file_block.BlockId);
             var result = await this.client_.call<string>("download", replicas.replicas);
@@ -164,7 +178,7 @@ namespace IVySoft.VDS.Client
             var keys = await client.call<LoginResponse>("login", login);
             var user_profile_replicas = await client.call<LookingBlockResponse>("looking_block", Convert.FromBase64String(keys.user_profile_id));
             var user_profile_data = await client.call<string>("download", user_profile_replicas.replicas);
-            var user_profile = Transactions.UserProfile.Deserialize(new System.IO.MemoryStream(Convert.FromBase64String(user_profile_data)));
+            var user_profile = UserProfile.Deserialize(new System.IO.MemoryStream(Convert.FromBase64String(user_profile_data)));
 
             if(Convert.ToBase64String(user_profile.password_hash) != Convert.ToBase64String(Crypto.CryptoUtils.sha256(Encoding.UTF8.GetBytes(password))))
             {
@@ -205,7 +219,7 @@ namespace IVySoft.VDS.Client
         {
             var chunkSize = 67108864;
             var chunk = new byte[chunkSize];
-            var files = new List<Transactions.FileInfo>();
+            var files = new List<FileInfo>();
             var playload = new System.IO.MemoryStream();
             foreach (var inputFile in inputFiles)
             {
@@ -280,7 +294,7 @@ namespace IVySoft.VDS.Client
                         throw new Exception($"File {inputFile.SystemPath} has been changed during upload process");
                     }
 
-                    var info = new Transactions.FileInfo(
+                    var info = new FileInfo(
                         inputFile.Name,
                         "application/octet-stream",
                         size,
@@ -290,7 +304,7 @@ namespace IVySoft.VDS.Client
 
                     if (null != inputFile.UploadedCallback)
                     {
-                        inputFile.UploadedCallback(info);
+                        inputFile.UploadedCallback(new ChannelMessageFileInfo(info));
                     }
 
                     files.Add(info);
@@ -309,7 +323,7 @@ namespace IVySoft.VDS.Client
                 Convert.ToBase64String(playload.ToArray()));
         }
 
-        public async Task<Transactions.ChannelCreateTransaction> create_channel(
+        public async Task<Api.Channel> create_channel(
             Api.ThisUser user,
             string channel_type,
             string channel_name) {
@@ -346,7 +360,7 @@ namespace IVySoft.VDS.Client
                 "broadcast",
                 Convert.ToBase64String(playload.ToArray()));
 
-            return channel;
+            return new Channel(channel);
         }
 
         private async Task<KeyValuePair<FileBlock, BlockInfo>> save_block(byte[] data, int size)

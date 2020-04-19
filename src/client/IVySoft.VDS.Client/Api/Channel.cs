@@ -1,4 +1,6 @@
-﻿using IVySoft.VDS.Client.Transactions;
+﻿using IVySoft.VDS.Client.Crypto;
+using IVySoft.VDS.Client.Transactions;
+using IVySoft.VDS.Client.Transactions.Data;
 using Org.BouncyCastle.Security;
 using System;
 using System.Collections.Generic;
@@ -20,7 +22,7 @@ namespace IVySoft.VDS.Client.Api
         private readonly Dictionary<string, KeyPair> read_keys_ = new Dictionary<string, KeyPair>();
         private readonly Dictionary<string, KeyPair> write_keys_ = new Dictionary<string, KeyPair>();
 
-        public Channel(ChannelCreateTransaction t)
+        internal Channel(ChannelCreateTransaction t)
         {
             this.id_ = Convert.ToBase64String(Crypto.CryptoUtils.public_key_fingerprint(t.AdminKey.PublicKey));
             this.type_ = t.Type;
@@ -106,12 +108,12 @@ namespace IVySoft.VDS.Client.Api
                 return ms.ToArray();
             }
         }
-        internal ChannelMessage decrypt(CryptedChannelMessage message)
+        internal Transactions.ChannelMessage decrypt(CryptedChannelMessage message)
         {
             var read_keys = this.read_keys_[message.read_id];
             return decrypt(read_keys, message);
         }
-        private ChannelMessage decrypt(KeyPair read_keys, CryptedChannelMessage message)
+        private Transactions.ChannelMessage decrypt(KeyPair read_keys, CryptedChannelMessage message)
         {
             var key_data = Crypto.CryptoUtils.decrypt_by_private_key(read_keys.PrivateKey, Convert.FromBase64String(message.crypted_key));
 

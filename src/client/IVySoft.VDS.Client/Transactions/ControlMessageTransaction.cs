@@ -4,7 +4,7 @@ using System.Text;
 
 namespace IVySoft.VDS.Client.Transactions
 {
-    public class CreateWalletMessage : ChannelMessage
+    internal class CreateWalletMessage : ChannelMessage
     {
         public const int MessageId = 108;
 

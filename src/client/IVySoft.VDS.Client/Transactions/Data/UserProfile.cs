@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace IVySoft.VDS.Client.Transactions
+namespace IVySoft.VDS.Client.Transactions.Data
 {
     public class UserProfile
     {
@@ -13,8 +13,8 @@ namespace IVySoft.VDS.Client.Transactions
         {
             using (var ms = new System.IO.MemoryStream())
             {
-                ms.push_data(this.password_hash);
-                ms.push_data(this.user_private_key);
+                ms.push_data(password_hash);
+                ms.push_data(user_private_key);
                 return ms.ToArray();
             }
         }

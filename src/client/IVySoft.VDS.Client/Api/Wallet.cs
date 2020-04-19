@@ -1,4 +1,5 @@
-﻿using IVySoft.VDS.Client.Transactions;
+﻿using IVySoft.VDS.Client.Crypto;
+using IVySoft.VDS.Client.Transactions;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -11,7 +12,7 @@ namespace IVySoft.VDS.Client.Api
         private readonly string name_;
         private readonly KeyPair key_;
 
-        public Wallet(CreateWalletMessage msg)
+        internal Wallet(CreateWalletMessage msg)
         {
             this.name_ = msg.Name;
             this.key_ = new KeyPair

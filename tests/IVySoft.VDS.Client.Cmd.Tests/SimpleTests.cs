@@ -47,14 +47,9 @@ namespace IVySoft.VDS.Client.Cmd.Tests
                 }
 
                 string channel_id = null;
-                foreach (var message in servers.GetChannels(login, password, 1))
+                foreach (var channel in servers.GetChannels(login, password, 1))
                 {
-                    switch (message)
-                    {
-                        case Transactions.ChannelCreateTransaction msg:
-                            channel_id = new Api.Channel(msg).Id;
-                            break;
-                    }
+                    channel_id = channel.Id;
                     if (!string.IsNullOrEmpty(channel_id))
                     {
                         break;
@@ -62,7 +57,6 @@ namespace IVySoft.VDS.Client.Cmd.Tests
                 }
 
                 Assert.True(!string.IsNullOrEmpty(channel_id));
-
 
                 servers.sync_files(login, password, channel_id, 1, source_folder);
                 servers.sync_files(login, password, channel_id, 1, dest_folder_local);

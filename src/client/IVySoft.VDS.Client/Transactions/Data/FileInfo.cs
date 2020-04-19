@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace IVySoft.VDS.Client.Transactions
+namespace IVySoft.VDS.Client.Transactions.Data
 {
-    public class FileInfo
+    internal class FileInfo
     {
         private readonly string name_;
         private readonly string mime_type_;
@@ -14,11 +14,11 @@ namespace IVySoft.VDS.Client.Transactions
 
         public FileInfo(string name, string mime_type, long size, byte[] file_id, FileBlock[] file_blocks)
         {
-            this.name_ = name;
-            this.mime_type_ = mime_type;
-            this.size_ = size;
-            this.file_id_ = file_id;
-            this.file_blocks_ = file_blocks;
+            name_ = name;
+            mime_type_ = mime_type;
+            size_ = size;
+            file_id_ = file_id;
+            file_blocks_ = file_blocks;
         }
 
         public byte[] Id { get => file_id_; }
@@ -27,7 +27,7 @@ namespace IVySoft.VDS.Client.Transactions
         public long Size { get => size_; }
         public IEnumerable<FileBlock> Blocks { get => file_blocks_; }
 
-        internal static FileInfo Deserialize(System.IO.Stream stream)
+        internal static FileInfo Deserialize(Stream stream)
         {
             var name = stream.get_string();
             var mime_type = stream.get_string();
@@ -46,13 +46,13 @@ namespace IVySoft.VDS.Client.Transactions
 
         internal void Serialize(Stream stream)
         {
-            stream.push_string(this.name_);
-            stream.push_string(this.mime_type_);
-            stream.push_int64(this.size_);
-            stream.push_data(this.file_id_);
+            stream.push_string(name_);
+            stream.push_string(mime_type_);
+            stream.push_int64(size_);
+            stream.push_data(file_id_);
 
-            stream.write_number(this.file_blocks_.Length);
-            foreach(var block in this.file_blocks_)
+            stream.write_number(file_blocks_.Length);
+            foreach (var block in file_blocks_)
             {
                 block.Serialize(stream);
             }

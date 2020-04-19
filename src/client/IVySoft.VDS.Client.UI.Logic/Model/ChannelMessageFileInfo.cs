@@ -1,31 +1,41 @@
-﻿using System.ComponentModel;
+﻿using IVySoft.VDS.Client.Transactions.Data;
+using System.ComponentModel;
 
 namespace IVySoft.VDS.Client.UI.Logic.Model
 {
     public class ChannelMessageFileInfo : INotifyPropertyChanged
     {
-        private Transactions.FileInfo info_;
+        private Api.ChannelMessageFileInfo info_;
+        private string name_;
+        private long length_;
         private bool inProgress_;
         private int progress_;
 
-        public ChannelMessageFileInfo(Transactions.FileInfo fi)
+        public ChannelMessageFileInfo(Api.ChannelMessageFileInfo fi)
         {
             this.InProgress = false;
             this.info_ = fi;
-
+            this.name_ = fi.Name;
+            this.length_ = fi.Size;
+        }
+        public ChannelMessageFileInfo(string name, long length)
+        {
+            this.InProgress = false;
+            this.name_ = name;
+            this.length_ = length;
         }
 
         public string Name
         {
-            get => this.info_.Name;
+            get => this.name_;
         }
 
-        public long Lenght
+        public long Length
         {
-            get => this.info_.Size;
+            get => this.length_;
         }
 
-        public Transactions.FileInfo Info
+        public Api.ChannelMessageFileInfo Info
         {
             get => this.info_;
             set => this.info_ = value;

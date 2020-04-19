@@ -1,4 +1,4 @@
-﻿namespace IVySoft.VDS.Client
+﻿namespace IVySoft.VDS.Client.Transactions.Data
 {
     internal class CryptedChannelMessage
     {

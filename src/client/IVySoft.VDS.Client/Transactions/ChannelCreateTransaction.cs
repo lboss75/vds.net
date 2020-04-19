@@ -1,9 +1,10 @@
-﻿using System;
+﻿using IVySoft.VDS.Client.Crypto;
+using System;
 using System.IO;
 
 namespace IVySoft.VDS.Client.Transactions
 {
-    public class ChannelCreateTransaction : ChannelMessage
+    internal class ChannelCreateTransaction : ChannelMessage
     {
         public const int MessageId = 110;
         private string channel_type;

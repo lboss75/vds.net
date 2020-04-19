@@ -1,4 +1,5 @@
 ﻿using IVySoft.VDS.Client.Api;
+using IVySoft.VDS.Client.Transactions;
 using IVySoft.VDS.Client.UI.Logic;
 using IVySoft.VDS.Client.UI.Logic.Model;
 using System;
@@ -89,21 +90,14 @@ namespace IVySoft.VDS.Client.UI.WPF
         }
 
 
-        private void OnGetChannels(ChannelMessage[] result)
+        private void OnGetChannels(Api.Channel[] result)
         {
             this.Dispatcher.Invoke(() =>
             {
                 this.DataContext.ChannelList.Clear();
                 foreach (var message in result)
                 {
-                    switch (message)
-                    {
-                        case Transactions.ChannelCreateTransaction msg:
-                            {
-                                this.DataContext.ChannelList.Add(msg);
-                                break;
-                            }
-                    }
+                    this.DataContext.ChannelList.Add(message);
                 }
             });
         }
@@ -118,14 +112,14 @@ namespace IVySoft.VDS.Client.UI.WPF
                 DataContext = this.DataContext
             });
 
-            this.DataContext.SelectedChannel = (Transactions.ChannelCreateTransaction)ChannelList.SelectedItem;
+            this.DataContext.SelectedChannel = (Api.Channel)ChannelList.SelectedItem;
             if (null != this.DataContext.SelectedChannel)
             {
                 using (var s = new VdsService())
                 {
                     try
                     {
-                        this.WriteChannelHistory(await s.Api.GetChannelMessages(new Api.Channel(this.DataContext.SelectedChannel)));
+                        this.WriteChannelHistory(await s.Api.GetChannelMessages(this.DataContext.SelectedChannel));
                     }
                     catch (Exception ex)
                     {
@@ -134,18 +128,13 @@ namespace IVySoft.VDS.Client.UI.WPF
                 }
             }
         }
-        private void WriteChannelHistory(ChannelMessage[] result)
+        private void WriteChannelHistory(Api.ChannelMessage[] result)
         {
             this.Dispatcher.Invoke(() =>
             {
                 foreach (var item in result)
                 {
-                    switch (item)
-                    {
-                        case Transactions.UserMessageTransaction msg:
-                            this.DataContext.MessagesList.Add(new Logic.Model.ChannelMessage(msg));
-                            break;
-                    }
+                    this.DataContext.MessagesList.Add(new Logic.Model.ChannelMessage(item));
                 }
             });
         }

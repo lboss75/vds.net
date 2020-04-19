@@ -1,4 +1,5 @@
-﻿using System;
+﻿using IVySoft.VDS.Client.Transactions;
+using System;
 using System.Collections.Generic;
 
 namespace IVySoft.VDS.Client.Cmd.Tests
@@ -80,7 +81,7 @@ namespace IVySoft.VDS.Client.Cmd.Tests
             }
         }
 
-        internal ChannelMessage[] GetChannels(string login, string password, int server_index)
+        internal Api.Channel[] GetChannels(string login, string password, int server_index)
         {
             return Program.GetChannels(new ChannelsOptions
             {

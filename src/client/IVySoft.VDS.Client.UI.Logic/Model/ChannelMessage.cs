@@ -17,7 +17,7 @@ namespace IVySoft.VDS.Client.UI.Logic.Model
         {
         }
 
-        public ChannelMessage(UserMessageTransaction msg)
+        public ChannelMessage(Api.ChannelMessage msg)
         {
             this.Message = msg.Message;
             this.Files = new ObservableCollection<ChannelMessageFileInfo>(

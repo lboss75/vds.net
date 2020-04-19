@@ -1,4 +1,4 @@
-﻿using IVySoft.VDS.Client.Transactions;
+﻿using IVySoft.VDS.Client.Transactions.Data;
 using System;
 using System.Linq;
 using System.Security.Cryptography;
@@ -40,7 +40,7 @@ namespace IVySoft.VDS.Client.UI.Logic
                 }
             }
         }
-        public async Task<string> Download(FileInfo file_info, string target_folder)
+        public async Task<string> Download(Api.ChannelMessageFileInfo file_info, string target_folder)
         {
             foreach (var f in System.IO.Directory.GetFiles(target_folder,
                 System.IO.Path.GetFileNameWithoutExtension(file_info.Name)
