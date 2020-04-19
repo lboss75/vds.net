@@ -156,5 +156,10 @@ namespace IVySoft.VDS.Client.UI.WPF
             dlg.Owner = this;
             dlg.ShowDialog();
         }
+
+        private void CreateChannelAccess_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 }
