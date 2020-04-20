@@ -70,11 +70,47 @@ namespace IVySoft.VDS.Client.UI.WPF {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Password:.
+        /// </summary>
+        public static string Password {
+            get {
+                return ResourceManager.GetString("Password", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Password again:.
+        /// </summary>
+        public static string Password_again {
+            get {
+                return ResourceManager.GetString("Password_again", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Password does not match the confirm password.
         /// </summary>
         public static string PasswordDontMatch {
             get {
                 return ResourceManager.GetString("PasswordDontMatch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Register.
+        /// </summary>
+        public static string Register {
+            get {
+                return ResourceManager.GetString("Register", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to User Registter - Virtual Dirstributed Storage.
+        /// </summary>
+        public static string User_Registter__Virtual_Dirstributed_Storage {
+            get {
+                return ResourceManager.GetString("User_Registter__Virtual_Dirstributed_Storage", resourceCulture);
             }
         }
     }

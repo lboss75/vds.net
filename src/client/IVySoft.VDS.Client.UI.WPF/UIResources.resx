@@ -123,4 +123,16 @@
   <data name="PasswordDontMatch" xml:space="preserve">
     <value>Password does not match the confirm password</value>
   </data>
+  <data name="Password" xml:space="preserve">
+    <value>Password:</value>
+  </data>
+  <data name="Password_again" xml:space="preserve">
+    <value>Password again:</value>
+  </data>
+  <data name="Register" xml:space="preserve">
+    <value>Register</value>
+  </data>
+  <data name="User_Registter__Virtual_Dirstributed_Storage" xml:space="preserve">
+    <value>User Registter - Virtual Dirstributed Storage</value>
+  </data>
 </root>
