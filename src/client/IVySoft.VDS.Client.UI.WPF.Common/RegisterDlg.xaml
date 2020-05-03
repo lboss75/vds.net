@@ -1,5 +1,15 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Window x:Class="IVySoft.VDS.Client.UI.WPF.RegisterDlg" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:local="clr-namespace:IVySoft.VDS.Client.UI.WPF" mc:Ignorable="d" WindowStartupLocation="CenterScreen" Title="{x:Static local:UIResources.User_Registter__Virtual_Dirstributed_Storage}" Height="160" Width="400" Loaded="Window_Loaded">
+<Window x:Class="IVySoft.VDS.Client.UI.WPF.Common.RegisterDlg"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:IVySoft.VDS.Client.UI.WPF.Common"
+        mc:Ignorable="d"
+        WindowStartupLocation="CenterScreen"
+        Title="{x:Static local:UIResources.User_Registter__Virtual_Dirstributed_Storage}"
+        Height="160" Width="400"
+        Loaded="Window_Loaded">
   <Grid>
     <Grid.ColumnDefinitions>
       <ColumnDefinition Width="Auto" />

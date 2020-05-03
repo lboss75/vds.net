@@ -2,6 +2,7 @@
 using IVySoft.VDS.Client.Transactions;
 using IVySoft.VDS.Client.UI.Logic;
 using IVySoft.VDS.Client.UI.Logic.Model;
+using IVySoft.VDS.Client.UI.WPF.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -150,12 +151,6 @@ namespace IVySoft.VDS.Client.UI.WPF
             }
         }
 
-        private void ViewWallet(object sender, RoutedEventArgs e)
-        {
-            var dlg = new WalletsWindow();
-            dlg.Owner = this;
-            dlg.ShowDialog();
-        }
 
         private void CreateChannelAccess_Click(object sender, RoutedEventArgs e)
         {

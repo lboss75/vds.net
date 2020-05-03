@@ -16,7 +16,6 @@
                 <MenuItem Header="Доступ к каналу" Click="CreateChannelAccess_Click" />
             </MenuItem>
             <MenuItem Header="Посмотреть">
-                <MenuItem Header="Кошельки" Click="ViewWallet" />
             </MenuItem>
         </Menu>
     <Grid>

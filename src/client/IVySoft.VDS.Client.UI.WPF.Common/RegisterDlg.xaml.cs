@@ -10,7 +10,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
-namespace IVySoft.VDS.Client.UI.WPF
+namespace IVySoft.VDS.Client.UI.WPF.Common
 {
     /// <summary>
     /// Interaction logic for RegisterDlg.xaml
