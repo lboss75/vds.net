@@ -8,6 +8,20 @@ namespace IVySoft.VDS.Client.UI.Logic
     {
         public static string GetErrorMessage(Exception ex, bool required = true)
         {
+            var text = GetErrorMessageText(ex, required);
+            if(null != text)
+            {
+                switch (text)
+                {
+                    case "Root block is not allowed":
+                        return UIResources.RootBlockIsNotAllowed;
+                }
+
+            }
+            return text;
+        }
+        public static string GetErrorMessageText(Exception ex, bool required = true)
+        {
             if(ex is AggregateException)
             {
                 var e = (AggregateException)ex;
@@ -15,7 +29,7 @@ namespace IVySoft.VDS.Client.UI.Logic
                 {
                     if(!(x is AggregateException))
                     {
-                        var msg = GetErrorMessage(x, false);
+                        var msg = GetErrorMessageText(x, false);
                         if(null != msg)
                         {
                             return msg;
@@ -26,7 +40,7 @@ namespace IVySoft.VDS.Client.UI.Logic
                 {
                     if (x is AggregateException)
                     {
-                        var msg = GetErrorMessage(x, false);
+                        var msg = GetErrorMessageText(x, false);
                         if (null != msg)
                         {
                             return msg;

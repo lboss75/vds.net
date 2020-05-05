@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:IVySoft.VDS.Client.UI.WPF.Common"
         mc:Ignorable="d"
         WindowStartupLocation="CenterScreen"
-        Title="Вход - Virtual Dirstributed Storage" Height="130" Width="400"
+        Title="Sign In - Virtual Dirstributed Storage" Height="150" Width="400"
         Loaded="Window_Loaded">
     <Grid>
         <Grid.ColumnDefinitions>
@@ -19,15 +19,15 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         
-        <Label>Логин:</Label>
+        <Label>Login</Label>
         <TextBox Grid.Column="1" x:Name="loginEdit" Margin="5"/>
 
-        <Label Grid.Row="1">Пароль:</Label>
+        <Label Grid.Row="1">Password</Label>
         <PasswordBox Grid.Row="1" Grid.Column="1" x:Name="passwordEdit" Margin="5"/>
 
         <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center">
-            <Button Margin="10" Padding="10" Width="100" x:Name="okBtn" Click="okBtn_Click" IsDefault="True">Вход</Button>
-            <Button Margin="10" Padding="10" Width="100" x:Name="registerBtn" Click="registerBtn_Click">Регистрация</Button>
+            <Button Margin="10" Padding="10" Width="100" x:Name="okBtn" Click="okBtn_Click" IsDefault="True">Sign in</Button>
+            <Button Margin="10" Padding="10" Width="100" x:Name="registerBtn" Click="registerBtn_Click">Register</Button>
         </StackPanel>
     </Grid>
 </Window>

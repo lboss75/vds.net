@@ -125,7 +125,7 @@ namespace IVySoft.VDS.Client
         {
             System.IO.Directory.CreateDirectory(folder);
 
-            var body = JsonConvert.SerializeObject(new { vds = "0.1", name = user.Id });
+            var body = JsonConvert.SerializeObject(new { vds = "0.1", name = user.Id, size = size.ToString() });
             var sig = user.PersonalChannel.WriteKey.PrivateKey.SignData(System.Text.Encoding.UTF8.GetBytes(body), new SHA256CryptoServiceProvider());
             System.IO.File.WriteAllText(
                 System.IO.Path.Combine(folder, ".vds_storage.json"),
@@ -133,16 +133,18 @@ namespace IVySoft.VDS.Client
                 {
                     vds = "0.1",
                     name = user.Id,
+                    size = size.ToString(),
                     sign = Convert.ToBase64String(sig)
                 }));
 
             var der = Crypto.CryptoUtils.public_key_to_der(user.PersonalChannel.WriteKey.PublicKey);
-            return Convert.FromBase64String(await this.client_.call<string>("allocate_storage", Convert.ToBase64String(der), folder, size));
+            return Convert.FromBase64String(await this.client_.call<string>("allocate_storage", Convert.ToBase64String(der), folder));
         }
 
-        public Task<StorageInfo[]> GetStorage(Api.ThisUser user)
+        public async Task<StorageInfo[]> GetStorage(Api.ThisUser user)
         {
-            return this.client_.call<StorageInfo[]>("devices", user.Id);
+            var client = await this.get_client();
+            return await client.call<StorageInfo[]>("devices", user.Id);
         }
 
         public Task<byte[]> Download(ChannelMessageFileBlock block)

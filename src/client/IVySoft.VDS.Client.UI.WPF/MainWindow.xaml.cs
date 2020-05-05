@@ -64,21 +64,7 @@ namespace IVySoft.VDS.Client.UI.WPF
                     try
                     {
                         this.user_ = await s.Api.Login(dlg.Login, dlg.Password);
-                        var devices = await s.Api.GetStorage(this.user_);
-                        if(devices.Length == 0)
-                        {
-                            var folder = System.IO.Path.Combine(
-                                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                                "vds",
-                                "home",
-                                this.user_.Id,
-                                "storage");
-                            System.IO.Directory.CreateDirectory(folder);
-
-                            await s.Api.AllocateStorage(this.user_, folder, 4L * 1024 * 1024 * 1024);
-                            this.OnGetChannels(await s.Api.GetChannels(this.user_));
-
-                        }
+                        this.OnGetChannels(await s.Api.GetChannels(this.user_));
                     }
                     catch (Exception ex)
                     {

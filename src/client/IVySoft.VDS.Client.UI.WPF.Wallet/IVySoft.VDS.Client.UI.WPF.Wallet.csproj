@@ -7,8 +7,27 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\vplatform\src\kernel\IVySoft.VPlatform.Utils\IVySoft.VPlatform.Utils.csproj" />
     <ProjectReference Include="..\IVySoft.VDS.Client.UI.Logic\IVySoft.VDS.Client.UI.Logic.csproj" />
     <ProjectReference Include="..\IVySoft.VDS.Client.UI.WPF.Common\IVySoft.VDS.Client.UI.WPF.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="UIResources.Designer.cs">
+      <DependentUpon>UIResources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="UIResources.resx">
+      <LastGenOutput>UIResources.Designer.cs</LastGenOutput>
+      <Generator>PublicResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="UIResources.ru-RU.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
   </ItemGroup>
 
 </Project>

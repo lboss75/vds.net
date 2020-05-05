@@ -5,23 +5,44 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:IVySoft.VDS.Client.UI.WPF.Wallet"
         mc:Ignorable="d"
-        Title="Кошельки" Height="200" Width="1000"
+        Title="Wallets - Virtual Data Storage" Height="200" Width="1000"
         WindowStartupLocation="CenterScreen"
         Loaded="Window_Loaded">
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
         <ListView ItemsSource="{Binding .}">
             <ListView.View>
                 <GridView>
                     <GridView.Columns>
-                        <GridViewColumn Header="Кошелёк" DisplayMemberBinding="{Binding Name}" Width="100"/>
-                        <GridViewColumn Header="Утверждённый баланс" DisplayMemberBinding="{Binding Balance,StringFormat='{}{0:N0}'}" Width="150"/>
-                        <GridViewColumn Header="Ожидаемое изменение" DisplayMemberBinding="{Binding DeltaBalance,StringFormat='{}{0:N0}'}" Width="150"/>
-                        <GridViewColumn Header="Ожидаемый баланс" DisplayMemberBinding="{Binding ProposedBalance,StringFormat='{}{0:N0}'}" Width="150"/>
-                        <GridViewColumn Header="Валюта" DisplayMemberBinding="{Binding Currency}" Width="100"/>
-                        <GridViewColumn Header="Владелец" DisplayMemberBinding="{Binding Issuer}" Width="300"/>
+                        <GridViewColumn Header="Wallet" DisplayMemberBinding="{Binding Name}" Width="100"/>
+                        <GridViewColumn Header="Confirned Balance" DisplayMemberBinding="{Binding Balance,StringFormat='{}{0:N0}'}" Width="150"/>
+                        <GridViewColumn Header="Expected Delta" DisplayMemberBinding="{Binding DeltaBalance,StringFormat='{}{0:N0}'}" Width="150"/>
+                        <GridViewColumn Header="Expected Balance" DisplayMemberBinding="{Binding ProposedBalance,StringFormat='{}{0:N0}'}" Width="150"/>
+                        <GridViewColumn Header="Currency" DisplayMemberBinding="{Binding Currency}" Width="100"/>
+                        <GridViewColumn Header="Currency Owner" DisplayMemberBinding="{Binding Issuer}" Width="300"/>
                     </GridView.Columns>
                 </GridView>
             </ListView.View>
         </ListView>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Label>Allocated space on this device</Label>
+            <Slider Grid.Column="1" Maximum="100" TickFrequency="10" SmallChange="5" x:Name="AllocatedSpace" ValueChanged="AllocatedSpace_ValueChanged" Thumb.DragStarted="AllocatedSpace_DragStarted" Thumb.DragCompleted="AllocatedSpace_DragCompleted"  />
+            <Label Grid.Column="2" x:Name="AllocatedSpaceLabel" />
+            <Label Grid.Row="1">Used space on this device</Label>
+            <ProgressBar Grid.Row="1" Grid.Column="1" x:Name="UsedSpace" />
+            <Label Grid.Row="1" Grid.Column="2" x:Name="UsedSpaceLabel" />
+        </Grid>
     </Grid>
 </Window>
