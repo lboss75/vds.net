@@ -1,0 +1,55 @@
+﻿<UserControl x:Class="IVySoft.VDS.Client.UI.WPF.Disk.ucDiskPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:IVySoft.VDS.Client.UI.WPF.Disk" xmlns:filtereffects="clr-namespace:Svg.FilterEffects;assembly=Svg"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <local:Svg2ImageSource x:Key="Svg2ImageSource"/>
+    </UserControl.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <StackPanel>
+            <ToolBar ToolBarTray.IsLocked="True" >
+                <ComboBox x:Name="CurrentSource" ItemsSource="{Binding Sources}" SelectedItem="{Binding CurrentSource}">
+                    <ComboBox.ToolTip>Channel</ComboBox.ToolTip>
+                </ComboBox>
+                <Button>Copy</Button>
+                <Button>Move</Button>
+                <Button>Rename</Button>
+                <Separator />
+                <Button>Delete</Button>
+                <Separator />
+                <Button>Create Folder</Button>
+            </ToolBar>
+            <TextBox x:Name="CurrentPath" Text="{Binding Path}">
+                <TextBox.ToolTip>Current Path</TextBox.ToolTip>
+            </TextBox>
+        </StackPanel>
+        <ListView Grid.Row="1" ItemsSource="{Binding Files}" x:Name="FileListView" SelectionMode="Extended" MouseDoubleClick="FileListView_MouseDoubleClick">
+            <ListView.View>
+                <GridView>
+                    <GridView.Columns>
+                        <GridViewColumn Header="Name" Width="200" >
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Image Source="{Binding Path=Icon,Converter={StaticResource Svg2ImageSource}}"/>
+                                        <TextBlock Text="{Binding Name}"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                        <GridViewColumn Header="Size" Width="100" DisplayMemberBinding="{Binding Size}"/>
+                    </GridView.Columns>
+                </GridView>
+            </ListView.View>
+        </ListView>
+    </Grid>
+</UserControl>

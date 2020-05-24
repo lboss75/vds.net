@@ -14,9 +14,11 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="3.1.2" />
+    <PackageReference Include="System.Drawing.Common" Version="4.7.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\vplatform\src\resources\IVySoft.VPlatform.Resources.FileIcons\IVySoft.VPlatform.Resources.FileIcons.csproj" />
     <ProjectReference Include="..\IVySoft.VDS.Client\IVySoft.VDS.Client.csproj" />
   </ItemGroup>
 

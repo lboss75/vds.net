@@ -15,7 +15,7 @@ namespace IVySoft.VDS.Client.Cmd.Tests
         {
             this.server_root_ = Path.Combine(RootFolder, index.ToString());
             this.process_ = Process.Start(
-                Path.Combine(Environment.CurrentDirectory, "vds_web_server"),
+                Path.Combine(Environment.CurrentDirectory, "vds_ws_server"),
                 $"server start --root-folder {this.server_root_} -dev -P {8050 + index} -ll trace -lm dht_sync,dht,dht_session");
 
         }

@@ -1,4 +1,8 @@
-﻿using System;
+﻿using IVySoft.VDS.Client.Api;
+using IVySoft.VDS.Client.UI.Logic;
+using IVySoft.VDS.Client.UI.Logic.Files;
+using IVySoft.VDS.Client.UI.WPF.Common;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -20,9 +24,57 @@ namespace IVySoft.VDS.Client.UI.WPF.Disk
     /// </summary>
     public partial class MainWindow : Window
     {
+        private ThisUser user_;
+        private FileListFactory factory_;
+
         public MainWindow()
         {
             InitializeComponent();
         }
+
+        private async void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            this.factory_ = new FileListFactory();
+            this.LeftPanel.DataContext = new Logic.Files.FileListState(this.factory_);
+            this.RightPanel.DataContext = new Logic.Files.FileListState(this.factory_);
+
+            for (; ; )
+            {
+                var dlg = new LoginWindow();
+                dlg.Owner = this;
+                if (dlg.ShowDialog() != true)
+                {
+                    this.Close();
+                    return;
+                }
+
+                using (var s = new VdsService())
+                {
+                    try
+                    {
+                        this.user_ = await s.Api.Login(dlg.Login, dlg.Password);
+                        this.OnGetChannels(await s.Api.GetChannels(this.user_));
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show(this, UIUtils.GetErrorMessage(ex), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+                        continue;
+                    }
+                }
+                break;
+            }
+        }
+
+        private void OnGetChannels(Api.Channel[] result)
+        {
+            this.Dispatcher.Invoke(() =>
+            {
+                foreach (var channel in result)
+                {
+                    this.factory_.Sources.Add(new VdsChannelFileListSource(this.user_, channel));
+                }
+            });
+        }
+
     }
 }

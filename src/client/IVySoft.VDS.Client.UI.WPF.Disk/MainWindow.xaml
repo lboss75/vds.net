@@ -5,8 +5,52 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:IVySoft.VDS.Client.UI.WPF.Disk"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        Title="VDS Disk" Height="450" Width="800"
+        Loaded="Window_Loaded"
+        WindowStartupLocation="CenterScreen"
+        WindowState="Maximized">
+    <DockPanel>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="Create">
+                <MenuItem Header="Channel" />
+                <MenuItem Header="Channel Access" />
+            </MenuItem>
+            <MenuItem Header="View">
+            </MenuItem>
+            <MenuItem Header="Commands">
+                <MenuItem Header="Swap panels"/>
+                <MenuItem Header="Compare panels"/>
+            </MenuItem>
+        </Menu>
 
-    </Grid>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <local:ucDiskPanel x:Name="LeftPanel"/>
+            <GridSplitter Grid.Column="1" VerticalAlignment="Stretch" Width="3" HorizontalAlignment="Center" />
+            <local:ucDiskPanel Grid.Column="2" x:Name="RightPanel"/>
+            <GridSplitter Grid.Row="1" Grid.ColumnSpan="3" Height="3" VerticalAlignment="Center" HorizontalAlignment="Stretch"/>
+            <TabControl Grid.Row="2" Grid.ColumnSpan="3">
+                <TabItem Header="Operations">
+                    <ListView>
+                        <ListView.View>
+                            <GridView>
+                                <GridView.Columns>
+                                    <GridViewColumn Header="Title" Width="600"/>
+                                </GridView.Columns>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+                </TabItem>
+            </TabControl>
+        </Grid>
+    </DockPanel>
 </Window>
