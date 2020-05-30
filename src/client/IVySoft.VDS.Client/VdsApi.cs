@@ -70,6 +70,12 @@ namespace IVySoft.VDS.Client
             }
         }
 
+        public async Task<ServerStatistic> GetStatistics()
+        {
+            var client = await this.get_client();
+            return await this.client_.call<ServerStatistic>("statistics");
+        }
+
         public async Task<IEnumerable<Wallet>> GetWallets(ThisUser user)
         {
             var result = new List<Wallet>();
