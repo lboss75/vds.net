@@ -1,0 +1,68 @@
+﻿<Window x:Class="IVySoft.VDS.Client.UI.WPF.Monitor.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:IVySoft.VDS.Client.UI.WPF.Monitor"
+        mc:Ignorable="d"
+        Title="Statistics - Virtual Data Storage" Height="450" Width="800"
+        Loaded="Window_Loaded">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="3"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <ListView ItemsSource="{Binding Servers}" SelectionChanged="Servers_SelectionChanged" x:Name="Servers">
+            <ListView.View>
+                <GridView>
+                    <GridView.Columns>
+                        <GridViewColumn Header="ID" Width="100" DisplayMemberBinding="{Binding NodeId}"/>
+                        <GridViewColumn Header="Address" Width="200" DisplayMemberBinding="{Binding ServiceUri}"/>
+                    </GridView.Columns>
+                </GridView>
+            </ListView.View>
+        </ListView>
+        <Separator Grid.Row="1" Height="3" HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
+        <TabControl Grid.Row="2" x:Name="CurrentServer">
+            <TabControl.Items>
+                <TabItem Header="Sessions">
+                    <ListView ItemsSource="{Binding Sessions}">
+                        <ListView.View>
+                            <GridView>
+                                <GridView.Columns>
+                                    <GridViewColumn Header="Partner" Width="100" DisplayMemberBinding="{Binding Partner}"/>
+                                    <GridViewColumn Header="Address" Width="100" DisplayMemberBinding="{Binding Address}"/>
+                                    <GridViewColumn Header="MTU" DisplayMemberBinding="{Binding MTU}"/>
+                                    <GridViewColumn Header="Data(10m)" DisplayMemberBinding="{Binding Data10m}"/>
+                                    <GridViewColumn Header="Data(1m)" DisplayMemberBinding="{Binding Data1m}"/>
+                                    <GridViewColumn Header="Data(10s)" DisplayMemberBinding="{Binding Data10s}"/>
+                                    <GridViewColumn Header="Output Queue" DisplayMemberBinding="{Binding OutputQueue}"/>
+                                    <GridViewColumn Header="Input Queue" DisplayMemberBinding="{Binding InputQueue}"/>
+                                    <GridViewColumn Header="Idle" DisplayMemberBinding="{Binding Idle}"/>
+                                    <GridViewColumn Header="Delay" DisplayMemberBinding="{Binding Delay}"/>
+                                    <GridViewColumn Header="Other traffic" DisplayMemberBinding="{Binding OtherTraffic}"/>
+                                    <GridViewColumn Header="Service traffic" DisplayMemberBinding="{Binding Service}"/>
+                                </GridView.Columns>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+                </TabItem>
+                <TabItem Header="Route">
+                    <ListView ItemsSource="{Binding Route}">
+                        <ListView.View>
+                            <GridView>
+                                <GridView.Columns>
+                                    <GridViewColumn Header="NodeId" Width="100" DisplayMemberBinding="{Binding NodeId}"/>
+                                    <GridViewColumn Header="Proxy" Width="100" DisplayMemberBinding="{Binding Proxy}"/>
+                                    <GridViewColumn Header="Pinged" DisplayMemberBinding="{Binding Pinged}"/>
+                                    <GridViewColumn Header="Hops" DisplayMemberBinding="{Binding Hops}"/>
+                                </GridView.Columns>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+                </TabItem>
+            </TabControl.Items>
+        </TabControl>
+    </Grid>
+</Window>
