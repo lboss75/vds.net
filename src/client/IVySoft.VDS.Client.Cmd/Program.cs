@@ -2,6 +2,7 @@
 using IVySoft.VDS.Client.Api;
 using IVySoft.VDS.Client.Transactions;
 using IVySoft.VDS.Client.Transactions.Data;
+using IVySoft.VPlatform.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -77,7 +78,12 @@ namespace IVySoft.VDS.Client.Cmd
                 }))
                 {
                     var user = api.Login(source.Token, opts.Login, opts.Password).Result;
-                    api.AllocateStorage(source.Token, user, opts.DestinationPath, opts.Length, opts.UsageType).Wait();
+                    api.AllocateStorage(
+                        source.Token,
+                        user,
+                        opts.DestinationPath,
+                        HumanReadableFormat.Parse(opts.Length),
+                        string.IsNullOrWhiteSpace(opts.UsageType) ? "share" : opts.UsageType).Wait();
                 }
             }
 

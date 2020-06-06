@@ -69,7 +69,7 @@ namespace IVySoft.VDS.Client.Cmd.Tests
                     Password = password,
                     Server = $"localhost:{8050 + i}",
                     DestinationPath = System.IO.Path.Combine(this.servers_[i].ServerRoot, "storage"),
-                    Length = size
+                    Length = size.ToString()
                 });
 
                 if (0 == code)
