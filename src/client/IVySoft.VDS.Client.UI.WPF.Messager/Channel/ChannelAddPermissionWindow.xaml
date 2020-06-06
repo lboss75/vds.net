@@ -1,0 +1,36 @@
+﻿<Window x:Class="IVySoft.VDS.Client.UI.WPF.Channel.ChannelAddPermissionWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:IVySoft.VDS.Client.UI.WPF.Channel"
+        mc:Ignorable="d"
+        WindowStartupLocation="CenterScreen"
+        Title="Channel Add Permission" Height="150" Width="400">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Label>Channel:</Label>
+        <ComboBox Grid.Column="1"/>
+        <Label Grid.Row="1">User:</Label>
+        <TextBox Grid.Row="1" Grid.Column="1"/>
+        <Label Grid.Row="2">Permission:</Label>
+        <ComboBox Grid.Row="2" Grid.Column="1">
+            <ComboBox.Items>
+                <ComboBoxItem IsSelected="True">Read</ComboBoxItem>
+                <ComboBoxItem>Read + Write</ComboBoxItem>
+            </ComboBox.Items>
+        </ComboBox>
+        <StackPanel Grid.Row="3" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center">
+            <Button Margin="10" Padding="10" Width="100" x:Name="createBtn" IsDefault="True" >Создать</Button>
+        </StackPanel>
+    </Grid>
+</Window>

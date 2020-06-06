@@ -1,0 +1,23 @@
+﻿<Window x:Class="IVySoft.VDS.Client.UI.WPF.Common.ProgressWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:IVySoft.VDS.Client.UI.WPF.Common"
+        mc:Ignorable="d"
+        Title="Please wait" Height="150" Width="400"
+        WindowStartupLocation="CenterScreen"
+        Loaded="Window_Loaded">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Label Grid.ColumnSpan="2" x:Name="TaskMessage"/>
+        <Button Grid.Column="1" Grid.Row="1" Margin="10" Padding="5" x:Name="CancelBtn" Click="CancelBtn_Click">Cancel</Button>
+    </Grid>
+</Window>
