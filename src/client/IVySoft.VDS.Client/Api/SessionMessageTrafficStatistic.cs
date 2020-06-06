@@ -2,7 +2,7 @@
 {
     public class SessionMessageTrafficStatistic
     {
-        public int msg { get; set; }
+        public string msg { get; set; }
         public long sent { get; set; }
         public long sent_count { get; set; }
         public long rcv_good { get; set; }

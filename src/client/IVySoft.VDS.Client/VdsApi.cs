@@ -29,14 +29,12 @@ namespace IVySoft.VDS.Client
             this.options_ = new VdsApiClientOptions
             {
                 ServiceUri = new Uri(config.ServiceUri),
-                ConnectionTimeout = TimeSpan.FromSeconds(config.ConnectionTimeout),
-                SendTimeout = TimeSpan.FromSeconds(config.SendTimeout)
             };
         }
 
-        public async Task<string> CreateUser(string login, string password)
+        public async Task<string> CreateUser(System.Threading.CancellationToken token, string login, string password)
         {
-            var client = await this.get_client();
+            var client = await this.get_client(token);
             var user_key = new RSACryptoServiceProvider(4096);
             
             var profile_data = new UserProfile
@@ -44,7 +42,7 @@ namespace IVySoft.VDS.Client
                 password_hash = Crypto.CryptoUtils.sha256(Encoding.UTF8.GetBytes(password)),
                 user_private_key = Crypto.CryptoUtils.private_key_to_der(user_key, password)
             }.Serialize();
-            var profile_id = await client.call<BlockInfo>("upload", Convert.ToBase64String(profile_data));
+            var profile_id = await client.call<BlockInfo>(token, "upload", Convert.ToBase64String(profile_data));
 
             using (var ms = new System.IO.MemoryStream())
             {
@@ -65,22 +63,23 @@ namespace IVySoft.VDS.Client
                 }.Serialize(ms);
 
                 return await this.client_.call<string>(
+                    token,
                     "broadcast",
                     Convert.ToBase64String(ms.ToArray()));
             }
         }
 
-        public async Task<ServerStatistic> GetStatistics()
+        public async Task<ServerStatistic> GetStatistics(System.Threading.CancellationToken token)
         {
-            var client = await this.get_client();
-            return await this.client_.call<ServerStatistic>("statistics");
+            var client = await this.get_client(token);
+            return await this.client_.call<ServerStatistic>(token, "statistics");
         }
 
-        public async Task<IEnumerable<Wallet>> GetWallets(ThisUser user)
+        public async Task<IEnumerable<Wallet>> GetWallets(System.Threading.CancellationToken token, ThisUser user)
         {
             var result = new List<Wallet>();
-            var client = await this.get_client();
-            var messages = await client.call<CryptedChannelMessage[]>("get_channel_messages", user.Id);
+            var client = await this.get_client(token);
+            var messages = await client.call<CryptedChannelMessage[]>(token, "get_channel_messages", user.Id);
             foreach(var message in messages.Select(x => user.PersonalChannel.decrypt(x)))
             {
                 switch (message)
@@ -95,28 +94,28 @@ namespace IVySoft.VDS.Client
 
             return result;
         }
-        public async Task<IEnumerable<WalletBalance>> GetBalance(Wallet wallet)
+        public async Task<IEnumerable<WalletBalance>> GetBalance(System.Threading.CancellationToken token, Wallet wallet)
         {
-            var messages = await this.client_.call<Dto.WalletBalanceMessage[]>("balance", wallet.Id);
+            var messages = await this.client_.call<Dto.WalletBalanceMessage[]>(token, "balance", wallet.Id);
             return messages.Select(x => new WalletBalance(x));
         }
 
-        public async Task<string[]> get_sync_state()
+        public async Task<string[]> get_sync_state(System.Threading.CancellationToken token)
         {
-            var client = await this.get_client();
-            return await client.call<string[]>("log_head");
+            var client = await this.get_client(token);
+            return await client.call<string[]>(token, "log_head");
         }
 
-        public async Task<Channel[]> GetChannels(Api.ThisUser user)
+        public async Task<Channel[]> GetChannels(System.Threading.CancellationToken token, Api.ThisUser user)
         {
-            var messages = await this.client_.call<CryptedChannelMessage[]>("get_channel_messages", user.Id);
+            var messages = await this.client_.call<CryptedChannelMessage[]>(token, "get_channel_messages", user.Id);
             return messages.Select(x => user.PersonalChannel.decrypt(x)).OfType<ChannelCreateTransaction>().Select(x => new Channel(x)).ToArray();
         }
 
-        public async Task<Api.ChannelMessage[]> GetChannelMessages(Api.Channel channel)
+        public async Task<Api.ChannelMessage[]> GetChannelMessages(System.Threading.CancellationToken token, Api.Channel channel)
         {
-            var client = await this.get_client();
-            var messages = await client.call<CryptedChannelMessage[]>("get_channel_messages", channel.Id);
+            var client = await this.get_client(token);
+            var messages = await client.call<CryptedChannelMessage[]>(token, "get_channel_messages", channel.Id);
             return messages.Select(x => channel.decrypt(x)).OfType<UserMessageTransaction>().Select(x => new Api.ChannelMessage(x)).ToArray();
         }
 
@@ -127,11 +126,11 @@ namespace IVySoft.VDS.Client
         //    return messages.Select(x => channel.decrypt(x)).ToArray();
         //}
 
-        public async Task<byte[]> AllocateStorage(Api.ThisUser user, string folder, long size)
+        public async Task<byte[]> AllocateStorage(System.Threading.CancellationToken token, Api.ThisUser user, string folder, long size, string usage_type)
         {
             System.IO.Directory.CreateDirectory(folder);
 
-            var body = JsonConvert.SerializeObject(new { vds = "0.1", name = user.Id, size = size.ToString() });
+            var body = JsonConvert.SerializeObject(new { vds = "0.1", name = user.Id, size = size.ToString(), usage = usage_type });
             var sig = user.PersonalChannel.WriteKey.PrivateKey.SignData(System.Text.Encoding.UTF8.GetBytes(body), new SHA256CryptoServiceProvider());
             System.IO.File.WriteAllText(
                 System.IO.Path.Combine(folder, ".vds_storage.json"),
@@ -140,28 +139,29 @@ namespace IVySoft.VDS.Client
                     vds = "0.1",
                     name = user.Id,
                     size = size.ToString(),
+                    usage = usage_type,
                     sign = Convert.ToBase64String(sig)
                 }));
 
             var der = Crypto.CryptoUtils.public_key_to_der(user.PersonalChannel.WriteKey.PublicKey);
-            return Convert.FromBase64String(await this.client_.call<string>("allocate_storage", Convert.ToBase64String(der), folder));
+            return Convert.FromBase64String(await this.client_.call<string>(token, "allocate_storage", Convert.ToBase64String(der), folder));
         }
 
-        public async Task<StorageInfo[]> GetStorage(Api.ThisUser user)
+        public async Task<StorageInfo[]> GetStorage(System.Threading.CancellationToken token, Api.ThisUser user)
         {
-            var client = await this.get_client();
-            return await client.call<StorageInfo[]>("devices", user.Id);
+            var client = await this.get_client(token);
+            return await client.call<StorageInfo[]>(token, "devices", user.Id);
         }
 
-        public Task<byte[]> Download(ChannelMessageFileBlock block)
+        public Task<byte[]> Download(System.Threading.CancellationToken token, ChannelMessageFileBlock block)
         {
-            return this.Download(block.Data);
+            return this.Download(token, block.Data);
         }
 
-        private async Task<byte[]> Download(FileBlock file_block)
+        private async Task<byte[]> Download(System.Threading.CancellationToken token, FileBlock file_block)
         {
-            var replicas = await this.client_.call<LookingBlockResponse>("looking_block", file_block.BlockId);
-            var result = await this.client_.call<string>("download", replicas.replicas);
+            var replicas = await this.client_.call<LookingBlockResponse>(token, "looking_block", file_block.BlockId);
+            var result = await this.client_.call<string>(token, "download", replicas.replicas);
             return decrypt_file_block(file_block, Convert.FromBase64String(result));
         }
 
@@ -180,12 +180,12 @@ namespace IVySoft.VDS.Client
         }
 
 
-        public async Task<Api.ThisUser> Login(string login, string password)
+        public async Task<Api.ThisUser> Login(System.Threading.CancellationToken token, string login, string password)
         {
-            var client = await this.get_client();
-            var keys = await client.call<LoginResponse>("login", login);
-            var user_profile_replicas = await client.call<LookingBlockResponse>("looking_block", Convert.FromBase64String(keys.user_profile_id));
-            var user_profile_data = await client.call<string>("download", user_profile_replicas.replicas);
+            var client = await this.get_client(token);
+            var keys = await client.call<LoginResponse>(token, "login", login);
+            var user_profile_replicas = await client.call<LookingBlockResponse>(token, "looking_block", Convert.FromBase64String(keys.user_profile_id));
+            var user_profile_data = await client.call<string>(token, "download", user_profile_replicas.replicas);
             var user_profile = UserProfile.Deserialize(new System.IO.MemoryStream(Convert.FromBase64String(user_profile_data)));
 
             if(Convert.ToBase64String(user_profile.password_hash) != Convert.ToBase64String(Crypto.CryptoUtils.sha256(Encoding.UTF8.GetBytes(password))))
@@ -199,12 +199,12 @@ namespace IVySoft.VDS.Client
             return new Api.ThisUser(public_key, private_key);
         }
 
-        private async Task<VdsApiClient> get_client()
+        private async Task<VdsApiClient> get_client(System.Threading.CancellationToken token)
         {
             if(null == this.client_)
             {
                 var client = new VdsApiClient();
-                await client.Connect(this.options_);
+                await client.Connect(token, this.options_);
                 this.client_ = client;
             }
 
@@ -221,6 +221,7 @@ namespace IVySoft.VDS.Client
         }
 
         public async Task<string> UploadFiles(
+            System.Threading.CancellationToken token,
             Api.Channel channel,
             string message,
             FileUploadStream[] inputFiles)
@@ -249,7 +250,7 @@ namespace IVySoft.VDS.Client
 
                                 if (offset == chunkSize)
                                 {
-                                    var block_info = await save_block(chunk, chunkSize);
+                                    var block_info = await save_block(token, chunk, chunkSize);
                                     new Transactions.StoreBlockTransaction(
                                     
                                         block_info.Key.BlockId,
@@ -273,7 +274,7 @@ namespace IVySoft.VDS.Client
                             }
                             if (0 < offset)
                             {
-                                var block_info = await save_block(chunk, offset);
+                                var block_info = await save_block(token, chunk, offset);
                                 new Transactions.StoreBlockTransaction(
 
                                     block_info.Key.BlockId,
@@ -327,11 +328,13 @@ namespace IVySoft.VDS.Client
             playload.Write(cripted_data, 0, cripted_data.Length);
 
             return await this.client_.call<string>(
+                token,
                 "broadcast",
                 Convert.ToBase64String(playload.ToArray()));
         }
 
         public async Task<Api.Channel> create_channel(
+            System.Threading.CancellationToken token,
             Api.ThisUser user,
             string channel_type,
             string channel_name) {
@@ -363,24 +366,25 @@ namespace IVySoft.VDS.Client
             var cripted_data = user.PersonalChannel.channel_encrypt(message);
             playload.Write(cripted_data, 0, cripted_data.Length);
 
-            var client = await this.get_client();
+            var client = await this.get_client(token);
             var transaction_id = await client.call<string>(
+                token,
                 "broadcast",
                 Convert.ToBase64String(playload.ToArray()));
 
             return new Channel(channel);
         }
 
-        private async Task<KeyValuePair<FileBlock, BlockInfo>> save_block(byte[] data, int size)
+        private async Task<KeyValuePair<FileBlock, BlockInfo>> save_block(System.Threading.CancellationToken token, byte[] data, int size)
         {
-            var client = await this.get_client();
+            var client = await this.get_client(token);
             var key_data = Crypto.CryptoUtils.sha256(data, size);
             var iv_data = new byte[] { 0xa5, 0xbb, 0x9f, 0xce, 0xc2, 0xe4, 0x4b, 0x91, 0xa8, 0xc9, 0x59, 0x44, 0x62, 0x55, 0x90, 0x24 };
 
             var key_data2 = Crypto.CryptoUtils.sha256(Crypto.CryptoUtils.encrypt_by_aes_256_cbc(key_data, iv_data, data));
             var zipped = deflate(data, size);
             var crypted_data = Crypto.CryptoUtils.encrypt_by_aes_256_cbc(key_data2, iv_data, zipped);
-            var result = await client.call<BlockInfo>("upload", Convert.ToBase64String(crypted_data));
+            var result = await client.call<BlockInfo>(token, "upload", Convert.ToBase64String(crypted_data));
             return new KeyValuePair<FileBlock, BlockInfo>(
                 new FileBlock(
                     key_data,

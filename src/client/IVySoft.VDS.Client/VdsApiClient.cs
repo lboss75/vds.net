@@ -20,18 +20,15 @@ namespace IVySoft.VDS.Client
 
         public Action<Exception> ErrorHandler { get; set; }
 
-        public async Task Connect(VdsApiClientOptions options)
+        public async Task Connect(System.Threading.CancellationToken token, VdsApiClientOptions options)
         {
-            using (var cts = new CancellationTokenSource(options.ConnectionTimeout))
-            {
-                var ws = new ClientWebSocket();
-                await ws.ConnectAsync(options.ServiceUri, cts.Token);
-                this.ws_.start(
-                    ws,
-                    options.SendTimeout,
-                    x => this.input_handler(x),
-                    y => this.on_error(y));
-            }
+            var ws = new ClientWebSocket();
+            await ws.ConnectAsync(options.ServiceUri, token);
+            this.ws_.start(
+                ws,
+                token,
+                x => this.input_handler(x),
+                y => this.on_error(y));
         }
 
         private async Task input_handler(string body)
@@ -91,6 +88,7 @@ namespace IVySoft.VDS.Client
         }
 
         public async Task<T> call<T>(
+            System.Threading.CancellationToken token,
             string methodToCall,
             params object[] callParameters)
         {
@@ -103,7 +101,9 @@ namespace IVySoft.VDS.Client
                 this.action_handlers_.Add(id, source);
             }
 
-            this.ws_.enqueue(Encoding.UTF8.GetBytes(
+            this.ws_.enqueue(
+                token,
+                Encoding.UTF8.GetBytes(
                 JsonConvert.SerializeObject(
                     new WebsocketRequest
                     {

@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -49,29 +50,38 @@ namespace IVySoft.VDS.Client.UI.WPF.Wallet
             }
         }
 
-        private async void Window_Loaded(object sender, RoutedEventArgs e)
+        private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            for (; ; )
-            {
-                var dlg = new LoginWindow();
-                dlg.Owner = this;
-                if (dlg.ShowDialog() != true)
-                {
-                    this.Close();
-                    return;
-                }
+            this.Login();
+        }
 
+        private void Login()
+        {
+            var dlg = new LoginWindow();
+            dlg.Owner = this;
+            if (dlg.ShowDialog() != true)
+            {
+                this.Close();
+                return;
+            }
+
+            ProgressWindow.Run("User login", this, async token =>
+            {
                 using (var s = new VdsService())
                 {
                     try
                     {
-                        this.user_ = await s.Api.Login(dlg.Login, dlg.Password);
-                        await this.refresh(s);
+                        this.user_ = await s.Api.Login(token, dlg.Login, dlg.Password);
+                        await this.refresh(token, s);
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show(this, UIUtils.GetErrorMessage(ex), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
-                        continue;
+                        Dispatcher.Invoke(() =>
+                        {
+
+                            MessageBox.Show(this, UIUtils.GetErrorMessage(ex), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+                            this.Login();
+                        });
                     }
 
                     this.timer_ = new DispatcherTimer();
@@ -79,29 +89,33 @@ namespace IVySoft.VDS.Client.UI.WPF.Wallet
                     this.timer_.Interval = new TimeSpan(0, 0, 30);
                     this.timer_.Start();
                 }
-                break;
-            }
+            });
         }
 
-        private async void refresh(object sender, EventArgs e)
+        private void refresh(object sender, EventArgs e)
         {
-            using (var s = new VdsService())
+            ProgressWindow.Run(
+                "Refresh server statistics",
+                this, async token =>
             {
-                await this.refresh(s);
-            }
+                using (var s = new VdsService())
+                {
+                    await this.refresh(token, s);
+                }
+            });
         }
 
-        private async Task refresh(VdsService s)
+        private async Task refresh(CancellationToken token, VdsService s)
         {
             try
             {
-                this.DataContext.Clear();
+                var items = new List<Logic.Model.WalletBalance>();
 
-                foreach (var wallet in await s.Api.GetWallets(this.user_))
+                foreach (var wallet in await s.Api.GetWallets(token, this.user_))
                 {
-                    foreach (var b in await s.Api.GetBalance(wallet))
+                    foreach (var b in await s.Api.GetBalance(token, wallet))
                     {
-                        this.DataContext.Add(new Logic.Model.WalletBalance
+                        items.Add(new Logic.Model.WalletBalance
                         {
                             Id = wallet.Id,
                             Name = wallet.Name,
@@ -112,12 +126,28 @@ namespace IVySoft.VDS.Client.UI.WPF.Wallet
                         });
                     }
                 }
+                Dispatcher.Invoke(() =>
+                {
+                    Logic.CollectionUtils.Update(
+                        this.DataContext,
+                        items,
+                        (x, y) => x.Id == y.Id,
+                        (x, y) =>
+                        {
+                            x.Name = y.Name;
+                            x.Balance = y.Balance;
+                            x.ProposedBalance = y.ProposedBalance;
+                            x.Currency = y.Currency;
+                            x.Issuer = y.Issuer;
+                        },
+                        x => x);
+                });
 
                 long reserved_size = 0;
                 long used_size = 0;
                 long free_size = 0;
 
-                var devices = await s.Api.GetStorage(this.user_);
+                var devices = await s.Api.GetStorage(token, this.user_);
                 foreach (var d in devices)
                 {
                     reserved_size += d.reserved_size;
@@ -155,7 +185,7 @@ namespace IVySoft.VDS.Client.UI.WPF.Wallet
 
         private async void AllocatedSpace_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            await AllocateStorage(!this.AllocatedSpaceDragStarted_);
+            ProgressWindow.Run("Allocate space", this, token => AllocateStorage(token, !this.AllocatedSpaceDragStarted_));
         }
 
         private void AllocatedSpace_DragStarted(object sender, System.Windows.Controls.Primitives.DragStartedEventArgs e)
@@ -163,13 +193,13 @@ namespace IVySoft.VDS.Client.UI.WPF.Wallet
             this.AllocatedSpaceDragStarted_ = true;
         }
 
-        private async void AllocatedSpace_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
+        private void AllocatedSpace_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
         {
             this.AllocatedSpaceDragStarted_ = false;
-            await this.AllocateStorage(true);
+            ProgressWindow.Run("Allocate space", this, token => this.AllocateStorage(token, true));
         }
 
-        private async Task AllocateStorage(bool complete)
+        private async Task AllocateStorage(CancellationToken token, bool complete)
         {
             try
             {
@@ -178,7 +208,7 @@ namespace IVySoft.VDS.Client.UI.WPF.Wallet
                 {
                     using (var s = new VdsService())
                     {
-                        var devices = await s.Api.GetStorage(this.user_);
+                        var devices = await s.Api.GetStorage(token, this.user_);
                         if (devices.Length == 0)
                         {
                             var root_folder = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
@@ -193,7 +223,7 @@ namespace IVySoft.VDS.Client.UI.WPF.Wallet
                             System.IO.Directory.CreateDirectory(folder);
 
                             reserved_size = (long)(AllocatedSpace.Value * this.free_size_ / 100);
-                            await s.Api.AllocateStorage(this.user_, folder, reserved_size);
+                            await s.Api.AllocateStorage(token, this.user_, folder, reserved_size, "share");
                         }
                         else
                         {
@@ -201,7 +231,7 @@ namespace IVySoft.VDS.Client.UI.WPF.Wallet
                             reserved_size = (long)(AllocatedSpace.Value * this.free_size_ / 100);
                             if (complete)
                             {
-                                await s.Api.AllocateStorage(this.user_, devices[0].local_path, reserved_size);
+                                await s.Api.AllocateStorage(token, this.user_, devices[0].local_path, reserved_size, devices[0].usage_type);
                             }
                         }
                     }

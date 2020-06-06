@@ -23,7 +23,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IVySoft.VDS.Client.UI", "IV
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IVySoft.VDS.Client.UI.Logic", "IVySoft.VDS.Client.UI.Logic\IVySoft.VDS.Client.UI.Logic.csproj", "{82C19710-80FC-440E-86F5-910AF540C278}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IVySoft.VDS.Client.UI.WPF", "IVySoft.VDS.Client.UI.WPF\IVySoft.VDS.Client.UI.WPF.csproj", "{C6A13732-2A40-40AC-AA6B-5D1C4B28CDE5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IVySoft.VDS.Client.UI.WPF.Messager", "IVySoft.VDS.Client.UI.WPF.Messager\IVySoft.VDS.Client.UI.WPF.Messager.csproj", "{C6A13732-2A40-40AC-AA6B-5D1C4B28CDE5}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IVySoft.VDS.Client.UI.WPF.Wallet", "IVySoft.VDS.Client.UI.WPF.Wallet\IVySoft.VDS.Client.UI.WPF.Wallet.csproj", "{094CB885-D165-4D35-9B25-0539E550F639}"
 EndProject
@@ -35,7 +35,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IVySoft.VPlatform.Utils", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IVySoft.VPlatform.Resources.FileIcons", "..\..\..\vplatform\src\resources\IVySoft.VPlatform.Resources.FileIcons\IVySoft.VPlatform.Resources.FileIcons.csproj", "{B8AB3A53-E29B-4F8E-9DB3-FA59EAA8A530}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IVySoft.VDS.Client.UI.WPF.Monitor", "IVySoft.VDS.Client.UI.WPF.Monitor\IVySoft.VDS.Client.UI.WPF.Monitor.csproj", "{D6F94252-F026-44E9-A3AE-6CF711B2D14B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IVySoft.VDS.Client.UI.WPF.Monitor", "IVySoft.VDS.Client.UI.WPF.Monitor\IVySoft.VDS.Client.UI.WPF.Monitor.csproj", "{D6F94252-F026-44E9-A3AE-6CF711B2D14B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

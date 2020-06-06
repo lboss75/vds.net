@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Threading;
 
 namespace IVySoft.VDS.Client.UI.Logic.Files
 {
@@ -27,6 +28,11 @@ namespace IVySoft.VDS.Client.UI.Logic.Files
         }
 
         public ObservableCollection<IFileListItem> Files => this.files_;
+
+        public System.Threading.Tasks.Task Refresh(CancellationToken token)
+        {
+            return this.owner_.UpdateFiles(token);
+        }
 
         public bool TryParsePath(string path)
         {

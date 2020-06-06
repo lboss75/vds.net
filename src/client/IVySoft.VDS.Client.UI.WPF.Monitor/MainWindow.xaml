@@ -6,55 +6,143 @@
         xmlns:local="clr-namespace:IVySoft.VDS.Client.UI.WPF.Monitor"
         mc:Ignorable="d"
         Title="Statistics - Virtual Data Storage" Height="450" Width="800"
-        Loaded="Window_Loaded">
+        Loaded="Window_Loaded"
+        WindowStartupLocation="CenterScreen"
+        WindowState="Maximized">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="3"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <ListView ItemsSource="{Binding Servers}" SelectionChanged="Servers_SelectionChanged" x:Name="Servers">
+        <ListView ItemsSource="{Binding Servers}" SelectedItem="{Binding SelectedServer}" x:Name="Servers">
             <ListView.View>
                 <GridView>
                     <GridView.Columns>
-                        <GridViewColumn Header="ID" Width="100" DisplayMemberBinding="{Binding NodeId}"/>
+                        <GridViewColumn Header="ID" Width="300" DisplayMemberBinding="{Binding NodeId}"/>
                         <GridViewColumn Header="Address" Width="200" DisplayMemberBinding="{Binding ServiceUri}"/>
                     </GridView.Columns>
                 </GridView>
             </ListView.View>
         </ListView>
-        <Separator Grid.Row="1" Height="3" HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
+        <GridSplitter Grid.Row="1" Height="3" HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
         <TabControl Grid.Row="2" x:Name="CurrentServer">
             <TabControl.Items>
                 <TabItem Header="Sessions">
-                    <ListView ItemsSource="{Binding Sessions}">
-                        <ListView.View>
-                            <GridView>
-                                <GridView.Columns>
-                                    <GridViewColumn Header="Partner" Width="100" DisplayMemberBinding="{Binding Partner}"/>
-                                    <GridViewColumn Header="Address" Width="100" DisplayMemberBinding="{Binding Address}"/>
-                                    <GridViewColumn Header="MTU" DisplayMemberBinding="{Binding MTU}"/>
-                                    <GridViewColumn Header="Data(10m)" DisplayMemberBinding="{Binding Data10m}"/>
-                                    <GridViewColumn Header="Data(1m)" DisplayMemberBinding="{Binding Data1m}"/>
-                                    <GridViewColumn Header="Data(10s)" DisplayMemberBinding="{Binding Data10s}"/>
-                                    <GridViewColumn Header="Output Queue" DisplayMemberBinding="{Binding OutputQueue}"/>
-                                    <GridViewColumn Header="Input Queue" DisplayMemberBinding="{Binding InputQueue}"/>
-                                    <GridViewColumn Header="Idle" DisplayMemberBinding="{Binding Idle}"/>
-                                    <GridViewColumn Header="Delay" DisplayMemberBinding="{Binding Delay}"/>
-                                    <GridViewColumn Header="Other traffic" DisplayMemberBinding="{Binding OtherTraffic}"/>
-                                    <GridViewColumn Header="Service traffic" DisplayMemberBinding="{Binding Service}"/>
-                                </GridView.Columns>
-                            </GridView>
-                        </ListView.View>
-                    </ListView>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="3"/>
+                            <ColumnDefinition Width="400"/>
+                        </Grid.ColumnDefinitions>
+                        <ListView ItemsSource="{Binding SelectedServer.Sessions}" SelectedItem="{Binding SelectedSession}">
+                            <ListView.View>
+                                <GridView>
+                                    <GridView.Columns>
+                                        <GridViewColumn Header="Partner" Width="350" DisplayMemberBinding="{Binding Partner}"/>
+                                        <GridViewColumn Header="Address" Width="200" DisplayMemberBinding="{Binding Address}"/>
+                                        <GridViewColumn Header="MTU" DisplayMemberBinding="{Binding MTU}"/>
+                                        <GridViewColumn Header="Data(10m)" DisplayMemberBinding="{Binding Data10m}"/>
+                                        <GridViewColumn Header="Data(1m)" DisplayMemberBinding="{Binding Data1m}"/>
+                                        <GridViewColumn Header="Data(10s)" DisplayMemberBinding="{Binding Data10s}"/>
+                                        <GridViewColumn Header="Output Queue" DisplayMemberBinding="{Binding OutputQueue}"/>
+                                        <GridViewColumn Header="Input Queue" DisplayMemberBinding="{Binding InputQueue}"/>
+                                        <GridViewColumn Header="Idle" DisplayMemberBinding="{Binding Idle}"/>
+                                        <GridViewColumn Header="Delay" DisplayMemberBinding="{Binding Delay}"/>
+                                        <GridViewColumn Header="Other traffic" DisplayMemberBinding="{Binding Other}"/>
+                                        <GridViewColumn Header="Service traffic" DisplayMemberBinding="{Binding Service}"/>
+                                    </GridView.Columns>
+                                </GridView>
+                            </ListView.View>
+                        </ListView>
+                        <GridSplitter Grid.Column="1" Width="3" HorizontalAlignment="Center" VerticalAlignment="Stretch"/>
+                        <TabControl Grid.Column="2">
+                            <TabItem Header="Direct Traffic">
+                                <ListView Grid.Column="2" ItemsSource="{Binding SelectedSession.DirectTraffic}">
+                                    <ListView.View>
+                                        <GridView>
+                                            <GridView.Columns>
+                                                <GridViewColumn Header="From" Width="350" DisplayMemberBinding="{Binding From}"/>
+                                                <GridViewColumn Header="To" Width="200" DisplayMemberBinding="{Binding To}"/>
+                                                <GridViewColumn Header="Msg" DisplayMemberBinding="{Binding Msg}"/>
+                                                <GridViewColumn Header="Sent" DisplayMemberBinding="{Binding Sent}"/>
+                                                <GridViewColumn Header="SentCount" DisplayMemberBinding="{Binding SentCount}"/>
+                                                <GridViewColumn Header="RcvGood" DisplayMemberBinding="{Binding RcvGood}"/>
+                                                <GridViewColumn Header="RcvGoodCount" DisplayMemberBinding="{Binding RcvGoodCount}"/>
+                                                <GridViewColumn Header="RcvBad" DisplayMemberBinding="{Binding RcvBad}"/>
+                                                <GridViewColumn Header="RcvBadCount" DisplayMemberBinding="{Binding RcvBadCount}"/>
+                                            </GridView.Columns>
+                                        </GridView>
+                                    </ListView.View>
+                                </ListView>
+                            </TabItem>
+                            <TabItem Header="External Traffic">
+                                <ListView Grid.Column="2" ItemsSource="{Binding SelectedSession.ExternalTraffic}">
+                                    <ListView.View>
+                                        <GridView>
+                                            <GridView.Columns>
+                                                <GridViewColumn Header="From" Width="350" DisplayMemberBinding="{Binding From}"/>
+                                                <GridViewColumn Header="To" Width="200" DisplayMemberBinding="{Binding To}"/>
+                                                <GridViewColumn Header="Msg" DisplayMemberBinding="{Binding Msg}"/>
+                                                <GridViewColumn Header="Sent" DisplayMemberBinding="{Binding Sent}"/>
+                                                <GridViewColumn Header="SentCount" DisplayMemberBinding="{Binding SentCount}"/>
+                                                <GridViewColumn Header="RcvGood" DisplayMemberBinding="{Binding RcvGood}"/>
+                                                <GridViewColumn Header="RcvGoodCount" DisplayMemberBinding="{Binding RcvGoodCount}"/>
+                                                <GridViewColumn Header="RcvBad" DisplayMemberBinding="{Binding RcvBad}"/>
+                                                <GridViewColumn Header="RcvBadCount" DisplayMemberBinding="{Binding RcvBadCount}"/>
+                                            </GridView.Columns>
+                                        </GridView>
+                                    </ListView.View>
+                                </ListView>
+                            </TabItem>
+                            <TabItem Header="Proxy Traffic">
+                                <ListView Grid.Column="2" ItemsSource="{Binding SelectedSession.ProxyTraffic}">
+                                    <ListView.View>
+                                        <GridView>
+                                            <GridView.Columns>
+                                                <GridViewColumn Header="From" Width="350" DisplayMemberBinding="{Binding From}"/>
+                                                <GridViewColumn Header="To" Width="200" DisplayMemberBinding="{Binding To}"/>
+                                                <GridViewColumn Header="Msg" DisplayMemberBinding="{Binding Msg}"/>
+                                                <GridViewColumn Header="Sent" DisplayMemberBinding="{Binding Sent}"/>
+                                                <GridViewColumn Header="SentCount" DisplayMemberBinding="{Binding SentCount}"/>
+                                                <GridViewColumn Header="RcvGood" DisplayMemberBinding="{Binding RcvGood}"/>
+                                                <GridViewColumn Header="RcvGoodCount" DisplayMemberBinding="{Binding RcvGoodCount}"/>
+                                                <GridViewColumn Header="RcvBad" DisplayMemberBinding="{Binding RcvBad}"/>
+                                                <GridViewColumn Header="RcvBadCount" DisplayMemberBinding="{Binding RcvBadCount}"/>
+                                            </GridView.Columns>
+                                        </GridView>
+                                    </ListView.View>
+                                </ListView>
+                            </TabItem>
+                            <TabItem Header="Other Traffic">
+                                <ListView Grid.Column="2" ItemsSource="{Binding SelectedSession.RestTraffic}">
+                                    <ListView.View>
+                                        <GridView>
+                                            <GridView.Columns>
+                                                <GridViewColumn Header="From" Width="350" DisplayMemberBinding="{Binding From}"/>
+                                                <GridViewColumn Header="To" Width="200" DisplayMemberBinding="{Binding To}"/>
+                                                <GridViewColumn Header="Msg" DisplayMemberBinding="{Binding Msg}"/>
+                                                <GridViewColumn Header="Sent" DisplayMemberBinding="{Binding Sent}"/>
+                                                <GridViewColumn Header="SentCount" DisplayMemberBinding="{Binding SentCount}"/>
+                                                <GridViewColumn Header="RcvGood" DisplayMemberBinding="{Binding RcvGood}"/>
+                                                <GridViewColumn Header="RcvGoodCount" DisplayMemberBinding="{Binding RcvGoodCount}"/>
+                                                <GridViewColumn Header="RcvBad" DisplayMemberBinding="{Binding RcvBad}"/>
+                                                <GridViewColumn Header="RcvBadCount" DisplayMemberBinding="{Binding RcvBadCount}"/>
+                                            </GridView.Columns>
+                                        </GridView>
+                                    </ListView.View>
+                                </ListView>
+                            </TabItem>
+                        </TabControl>
+                    </Grid>
                 </TabItem>
                 <TabItem Header="Route">
-                    <ListView ItemsSource="{Binding Route}">
+                    <ListView ItemsSource="{Binding SelectedServer.Route}">
                         <ListView.View>
                             <GridView>
                                 <GridView.Columns>
-                                    <GridViewColumn Header="NodeId" Width="100" DisplayMemberBinding="{Binding NodeId}"/>
-                                    <GridViewColumn Header="Proxy" Width="100" DisplayMemberBinding="{Binding Proxy}"/>
+                                    <GridViewColumn Header="NodeId" Width="350" DisplayMemberBinding="{Binding NodeId}"/>
+                                    <GridViewColumn Header="Proxy" Width="200" DisplayMemberBinding="{Binding Proxy}"/>
                                     <GridViewColumn Header="Pinged" DisplayMemberBinding="{Binding Pinged}"/>
                                     <GridViewColumn Header="Hops" DisplayMemberBinding="{Binding Hops}"/>
                                 </GridView.Columns>

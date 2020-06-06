@@ -10,5 +10,7 @@ namespace IVySoft.VDS.Client.UI.Logic.Files
         string Path { get; set; }
         bool TryParsePath(string path);
         ObservableCollection<IFileListItem> Files { get; }
+
+        System.Threading.Tasks.Task Refresh(System.Threading.CancellationToken token);
     }
 }

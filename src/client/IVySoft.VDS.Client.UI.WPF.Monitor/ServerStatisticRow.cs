@@ -25,7 +25,7 @@ namespace IVySoft.VDS.Client.UI.WPF.Monitor
             
             foreach(var session in stat.session.items)
             {
-                this.Sessions.Add(new ServerSessionStatistic(session));
+                this.Sessions.Add(new ServerSessionStatistic(stat.route.node_id, session));
             }
             foreach (var route in stat.route.items)
             {
@@ -35,14 +35,14 @@ namespace IVySoft.VDS.Client.UI.WPF.Monitor
 
         internal void Update(ServerStatistic stat)
         {
-            CollectionUtils.Update(
+            Logic.CollectionUtils.Update(
                 this.Sessions,
                 stat.session.items,
                 (x, y) => x.Partner == y.partner,
-                (x, y) => x.Update(y),
-                x => new ServerSessionStatistic(x));
+                (x, y) => x.Update(stat.route.node_id, y),
+                x => new ServerSessionStatistic(stat.route.node_id, x));
 
-            CollectionUtils.Update(
+            Logic.CollectionUtils.Update(
                 this.Route,
                 stat.route.items,
                 (x, y) => x.NodeId == y.node_id && x.Proxy == y.proxy,

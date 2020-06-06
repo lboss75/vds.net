@@ -7,7 +7,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\vplatform\src\kernel\IVySoft.VPlatform.Utils\IVySoft.VPlatform.Utils.csproj" />
     <ProjectReference Include="..\IVySoft.VDS.Client.UI.Logic\IVySoft.VDS.Client.UI.Logic.csproj" />
+    <ProjectReference Include="..\IVySoft.VDS.Client.UI.WPF.Common\IVySoft.VDS.Client.UI.WPF.Common.csproj" />
     <ProjectReference Include="..\IVySoft.VDS.Client\IVySoft.VDS.Client.csproj" />
   </ItemGroup>
 

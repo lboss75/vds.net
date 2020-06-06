@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Threading;
 
 namespace IVySoft.VDS.Client.Cmd.Tests
 {
@@ -48,37 +49,40 @@ namespace IVySoft.VDS.Client.Cmd.Tests
 
         internal void Sync(string server, HashSet<string> items, ref bool bContinue)
         {
-            using (VdsApi api = new VdsApi(new VdsApiConfig
+            using (var source = new CancellationTokenSource(TimeSpan.FromSeconds(60)))
             {
-                ServiceUri = "ws://" + server + "/api/ws"
-            }))
-            {
-                var current = api.get_sync_state().Result;
-                foreach(var item in current)
+                using (VdsApi api = new VdsApi(new VdsApiConfig
                 {
-                    if (!items.Contains(item))
-                    {
-                        items.Add(item);
-                        bContinue = true;
-                    }
-                }
-
-                foreach(var item in items)
+                    ServiceUri = "ws://" + server + "/api/ws"
+                }))
                 {
-                    bool bFound = false;
-                    foreach(var citem in current)
+                    var current = api.get_sync_state(source.Token).Result;
+                    foreach (var item in current)
                     {
-                        if(item == citem)
+                        if (!items.Contains(item))
                         {
-                            bFound = true;
-                            break;
+                            items.Add(item);
+                            bContinue = true;
                         }
                     }
-                    if (!bFound)
+
+                    foreach (var item in items)
                     {
-                        bContinue = true;
+                        bool bFound = false;
+                        foreach (var citem in current)
+                        {
+                            if (item == citem)
+                            {
+                                bFound = true;
+                                break;
+                            }
+                        }
+                        if (!bFound)
+                        {
+                            bContinue = true;
+                        }
                     }
-                }            
+                }
             }
         }
 

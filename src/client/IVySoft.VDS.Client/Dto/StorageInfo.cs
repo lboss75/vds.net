@@ -6,6 +6,7 @@
         public string local_path { get; set; }
         public long reserved_size { get; set; }
         public long used_size { get; set; }
+        public string usage_type { get; set; }
         public long free_size { get; set; }
     }
 }

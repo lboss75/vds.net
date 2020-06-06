@@ -3,6 +3,7 @@
     public enum MessageState
     {
         Draft,
-        Uploaded
+        Uploaded,
+        Failed
     }
 }

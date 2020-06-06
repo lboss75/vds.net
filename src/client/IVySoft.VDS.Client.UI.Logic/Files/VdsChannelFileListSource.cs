@@ -17,7 +17,6 @@ namespace IVySoft.VDS.Client.UI.Logic.Files
         {
             this.user_ = user;
             this.channel_ = channel;
-            ThreadPool.QueueUserWorkItem(new WaitCallback(this.UpdateFiles));
         }
 
         internal ObservableCollection<IFileListItem> GetFiles(string path)
@@ -30,11 +29,11 @@ namespace IVySoft.VDS.Client.UI.Logic.Files
             return this.files_.ContainsKey(path);
         }
 
-        private async void UpdateFiles(object state)
+        internal async System.Threading.Tasks.Task UpdateFiles(System.Threading.CancellationToken token)
         {
             using (var s = new VdsService())
             {
-                foreach(var message in await s.Api.GetChannelMessages(this.channel_))
+                foreach(var message in await s.Api.GetChannelMessages(token, this.channel_))
                 {
                     foreach(var f in message.Files)
                     {

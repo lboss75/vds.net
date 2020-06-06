@@ -10,5 +10,8 @@ namespace IVySoft.VDS.Client.Cmd
 
         [Option('d', "directory", Required = true, HelpText = "Path to directory")]
         public string DestinationPath { get; set; }
+
+        [Option("usage-type", Required = false, HelpText = "Storage usage type")]
+        public string UsageType { get; set; }
     }
 }

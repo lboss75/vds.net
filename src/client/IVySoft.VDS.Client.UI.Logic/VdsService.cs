@@ -40,7 +40,7 @@ namespace IVySoft.VDS.Client.UI.Logic
                 }
             }
         }
-        public async Task<string> Download(Api.ChannelMessageFileInfo file_info, string target_folder)
+        public async Task<string> Download(System.Threading.CancellationToken token, Api.ChannelMessageFileInfo file_info, string target_folder)
         {
             foreach (var f in System.IO.Directory.GetFiles(target_folder,
                 System.IO.Path.GetFileNameWithoutExtension(file_info.Name)
@@ -61,7 +61,7 @@ namespace IVySoft.VDS.Client.UI.Logic
                 {
                     foreach (var file_block in file_info.Blocks)
                     {
-                        var result = await this.api_.Download(file_block);
+                        var result = await this.api_.Download(token, file_block);
                         tmp_file.Write(result, 0, result.Length);
                     }
                 }

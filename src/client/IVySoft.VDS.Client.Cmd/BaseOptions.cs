@@ -12,5 +12,8 @@ namespace IVySoft.VDS.Client.Cmd
 
         [Option('s', "server", Required = false, Default = "localhost:8050", HelpText = "server url")]
         public string Server { get; set; }
+
+        [Option("timeout", Required = false, Default = 60, HelpText = "Timeout for operations")]
+        public int Timeout { get; set; }
     }
 }

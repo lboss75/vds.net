@@ -1,16 +1,19 @@
 ﻿using System;
+using System.ComponentModel;
 using System.IO;
 
 namespace IVySoft.VDS.Client.UI.Logic.Files
 {
-    internal class LocalSystemFileListItem : IFileListItem
+    internal class LocalSystemFileListItem : IFileListItem, INotifyPropertyChanged
     {
-        private readonly bool isFolder_;
-        private readonly bool isFile_;
-        private readonly string path_;
-        private readonly string name_;
-        private readonly long size_;
-        private readonly byte[] icon_;
+        private bool isFolder_;
+        private bool isFile_;
+        private string path_;
+        private string name_;
+        private long size_;
+        private byte[] icon_;
+
+        public event PropertyChangedEventHandler PropertyChanged;
 
         public LocalSystemFileListItem(bool isFolder, string path)
         {
@@ -32,16 +35,76 @@ namespace IVySoft.VDS.Client.UI.Logic.Files
             }
         }
 
-        public bool IsFolder => this.isFolder_;
+        internal void Update(LocalSystemFileListItem other)
+        {
+            this.IsFolder = other.isFolder_;
+            this.IsFile = other.isFile_;
+            this.FullName = other.path_;
+            this.Name = other.name_;
+            this.Size = other.size_;
+            this.Icon = other.icon_;
+        }
 
-        public bool IsFile => this.isFile_;
+        public bool IsFolder
+        {
+            get => this.isFolder_; private set
+            {
+                if(this.isFolder_ != value)
+                {
+                    this.isFolder_ = value;
+                    this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsFolder)));
+                }
+            }
+        }
 
-        public string Name => this.name_;
+        public bool IsFile { get => this.isFile_; private set
+            {
+                if (this.isFile_ != value)
+                {
+                    this.isFile_ = value;
+                    this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsFile)));
+                }
+            }
+        }
 
-        public long Size => this.size_;
+        public string Name { get => this.name_; private set
+            {
+                if (this.name_ != value)
+                {
+                    this.name_ = value;
+                    this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Name)));
+                }
+            }
+        }
 
-        public byte[] Icon => this.icon_;
+        public long Size {get=> this.size_; private set
+            {
+                if (this.size_ != value)
+                {
+                    this.size_ = value;
+                    this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Size)));
+                }
+            }
+        }
 
-        public string FullName => this.path_;
+        public byte[] Icon { get => this.icon_; private set
+            {
+                if (this.icon_ != value)
+                {
+                    this.icon_ = value;
+                    this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Icon)));
+                }
+            }
+        }
+
+        public string FullName {get=> this.path_; private set
+            {
+                if (this.path_ != value)
+                {
+                    this.path_ = value;
+                    this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(FullName)));
+                }
+            }
+        }
     }
 }

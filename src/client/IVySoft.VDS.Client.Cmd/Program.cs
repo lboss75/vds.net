@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Threading;
 
 namespace IVySoft.VDS.Client.Cmd
 {
@@ -13,24 +14,54 @@ namespace IVySoft.VDS.Client.Cmd
     {
         static int Main(string[] args)
         {
-            return Parser.Default.ParseArguments<ChannelsOptions, SyncOptions, AllocateStorageOptions>(args)
+            return Parser.Default.ParseArguments<
+                ChannelsOptions,
+                SyncOptions,
+                AllocateStorageOptions,
+                GetStorageOptions>(args)
                 .MapResult(
                   (CreateUserOptions opts) => RunAddAndReturnExitCode(opts),
                   (ChannelsOptions opts) => RunAddAndReturnExitCode(opts),
                   (SyncOptions opts) => RunAddAndReturnExitCode(opts),
                   (AllocateStorageOptions opts) => RunAddAndReturnExitCode(opts),
+                  (GetStorageOptions opts) => RunAddAndReturnExitCode(opts),
                   errs => 1);
 
         }
 
+        private static int RunAddAndReturnExitCode(GetStorageOptions opts)
+        {
+            using (var source = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(opts.Timeout)))
+            {
+                using (VdsApi api = new VdsApi(new VdsApiConfig
+                {
+                    ServiceUri = "ws://" + opts.Server + "/api/ws"
+                }))
+                {
+                    var user = api.Login(source.Token, opts.Login, opts.Password).Result;
+
+                    Console.WriteLine("Id|Path|Reserved|Used|Type");
+                    foreach (var storage in api.GetStorage(source.Token, user).Result)
+                    {
+                        Console.WriteLine($"{storage.id}|{storage.local_path}|{storage.reserved_size}|{storage.used_size}|{storage.usage_type}");
+                    }
+                }
+            }
+
+            return 0;
+        }
+
         public static int RunAddAndReturnExitCode(CreateUserOptions opts)
         {
-            using (VdsApi api = new VdsApi(new VdsApiConfig
+            using (var source = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(opts.Timeout)))
             {
-                ServiceUri = "ws://" + opts.Server + "/api/ws"
-            }))
-            {
-                api.CreateUser(opts.Login, opts.Password).Wait();
+                using (VdsApi api = new VdsApi(new VdsApiConfig
+                {
+                    ServiceUri = "ws://" + opts.Server + "/api/ws"
+                }))
+                {
+                    api.CreateUser(source.Token, opts.Login, opts.Password).Wait();
+                }
             }
 
             return 0;
@@ -38,13 +69,16 @@ namespace IVySoft.VDS.Client.Cmd
 
         public static int RunAddAndReturnExitCode(AllocateStorageOptions opts)
         {
-            using (VdsApi api = new VdsApi(new VdsApiConfig
+            using (var source = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(opts.Timeout)))
             {
-                ServiceUri = "ws://" + opts.Server + "/api/ws"
-            }))
-            {
-                var user = api.Login(opts.Login, opts.Password).Result;
-                api.AllocateStorage(user, opts.DestinationPath, opts.Length).Wait();
+                using (VdsApi api = new VdsApi(new VdsApiConfig
+                {
+                    ServiceUri = "ws://" + opts.Server + "/api/ws"
+                }))
+                {
+                    var user = api.Login(source.Token, opts.Login, opts.Password).Result;
+                    api.AllocateStorage(source.Token, user, opts.DestinationPath, opts.Length, opts.UsageType).Wait();
+                }
             }
 
             return 0;
@@ -52,62 +86,65 @@ namespace IVySoft.VDS.Client.Cmd
 
         public static int RunAddAndReturnExitCode(SyncOptions opts)
         {
-            using (VdsApi api = new VdsApi(new VdsApiConfig
+            using (var source = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(opts.Timeout)))
             {
-                ServiceUri = "ws://" + opts.Server + "/api/ws"
-            }))
-            {
-                var user  = api.Login(opts.Login, opts.Password).Result;
-                var channel = api.GetChannels(user).Result
-                    .SingleOrDefault(x => x.Id == opts.ChannelId);
-                if(channel == null)
+                using (VdsApi api = new VdsApi(new VdsApiConfig
                 {
-                    throw new Exception($"Channel {opts.ChannelId} not found");
-                }
-
-                var storage_files = new Dictionary<string, List<ChannelMessageFileInfo>>();
-                foreach (var message in api.GetChannelMessages(channel).Result)
+                    ServiceUri = "ws://" + opts.Server + "/api/ws"
+                }))
                 {
-                    foreach (var f in message.Files)
+                    var user = api.Login(source.Token, opts.Login, opts.Password).Result;
+                    var channel = api.GetChannels(source.Token, user).Result
+                        .SingleOrDefault(x => x.Id == opts.ChannelId);
+                    if (channel == null)
                     {
-                        List<ChannelMessageFileInfo> versions;
-                        if (!storage_files.TryGetValue(f.Name, out versions))
-                        {
-                            versions = new List<ChannelMessageFileInfo>();
-                            storage_files.Add(f.Name, versions);
-                        }
-                        versions.Add(f);
+                        throw new Exception($"Channel {opts.ChannelId} not found");
                     }
-                }
 
-                if (opts.Method == SyncMethod.Both || opts.Method == SyncMethod.Download)
-                {
-                    foreach (var f in storage_files)
+                    var storage_files = new Dictionary<string, List<ChannelMessageFileInfo>>();
+                    foreach (var message in api.GetChannelMessages(source.Token, channel).Result)
                     {
-                        DownloadFile(api, System.IO.Path.Combine(opts.DestinationPath, f.Key.Replace('/', System.IO.Path.DirectorySeparatorChar)), f.Value[0]);
-                    }
-                }
-
-                if (opts.Method == SyncMethod.Both || opts.Method == SyncMethod.Upload)
-                {
-                    var to_upload = new List<FileUploadStream>();
-
-                    var exists_files = CollectFiles(opts.DestinationPath);
-                    foreach (var f in exists_files)
-                    {
-                        if(IsNewFile(api, f, storage_files))
+                        foreach (var f in message.Files)
                         {
-                            to_upload.Add(f);
+                            List<ChannelMessageFileInfo> versions;
+                            if (!storage_files.TryGetValue(f.Name, out versions))
+                            {
+                                versions = new List<ChannelMessageFileInfo>();
+                                storage_files.Add(f.Name, versions);
+                            }
+                            versions.Add(f);
                         }
                     }
 
-                    if (to_upload.Count > 0)
+                    if (opts.Method == SyncMethod.Both || opts.Method == SyncMethod.Download)
                     {
-                        api.UploadFiles(channel, opts.Comment, to_upload.ToArray()).Wait();
+                        foreach (var f in storage_files)
+                        {
+                            DownloadFile(source.Token, api, System.IO.Path.Combine(opts.DestinationPath, f.Key.Replace('/', System.IO.Path.DirectorySeparatorChar)), f.Value[0]);
+                        }
                     }
-                }
 
-                return 0;
+                    if (opts.Method == SyncMethod.Both || opts.Method == SyncMethod.Upload)
+                    {
+                        var to_upload = new List<FileUploadStream>();
+
+                        var exists_files = CollectFiles(opts.DestinationPath);
+                        foreach (var f in exists_files)
+                        {
+                            if (IsNewFile(api, f, storage_files))
+                            {
+                                to_upload.Add(f);
+                            }
+                        }
+
+                        if (to_upload.Count > 0)
+                        {
+                            api.UploadFiles(source.Token, channel, opts.Comment, to_upload.ToArray()).Wait();
+                        }
+                    }
+
+                    return 0;
+                }
             }
         }
 
@@ -148,7 +185,7 @@ namespace IVySoft.VDS.Client.Cmd
             }
         }
 
-        private static void DownloadFile(VdsApi api, string file_name, ChannelMessageFileInfo file_info)
+        private static void DownloadFile(CancellationToken token, VdsApi api, string file_name, ChannelMessageFileInfo file_info)
         {
             if (System.IO.File.Exists(file_name))
             {
@@ -170,7 +207,7 @@ namespace IVySoft.VDS.Client.Cmd
                 {
                     foreach (var file_block in file_info.Blocks)
                     {
-                        var result = api.Download(file_block).Result;
+                        var result = api.Download(token, file_block).Result;
                         tmp_file.Write(result, 0, result.Length);
                     }
                 }
@@ -196,14 +233,17 @@ namespace IVySoft.VDS.Client.Cmd
         }
         public static Api.Channel[] GetChannels(ChannelsOptions opts)
         {
-            using (VdsApi api = new VdsApi(new VdsApiConfig
+            using (var source = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(opts.Timeout)))
             {
-                ServiceUri = "ws://" + opts.Server + "/api/ws"
-            }))
-            {
-                var user = api.Login(opts.Login, opts.Password).Result;
+                using (VdsApi api = new VdsApi(new VdsApiConfig
+                {
+                    ServiceUri = "ws://" + opts.Server + "/api/ws"
+                }))
+                {
+                    var user = api.Login(source.Token, opts.Login, opts.Password).Result;
 
-                return api.GetChannels(user).Result;
+                    return api.GetChannels(source.Token, user).Result;
+                }
             }
         }
 

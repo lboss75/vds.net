@@ -39,36 +39,47 @@ namespace IVySoft.VDS.Client.UI.WPF.Common
             passwordEdit.Password = this.Password;
         }
 
-        private async void registerBtn_Click(object sender, RoutedEventArgs e)
+        private void registerBtn_Click(object sender, RoutedEventArgs e)
         {
             var dlg = new RegisterDlg();
             if (true == dlg.ShowDialog())
             {
                 var save_cursor = Mouse.OverrideCursor;
                 Mouse.OverrideCursor = Cursors.Wait;
-                using (var s = new VdsService())
+                ProgressWindow.Run(
+                    "Register user",
+                    this, async token => 
                 {
-                    try
+                    using (var s = new VdsService())
                     {
-                        await s.Api.CreateUser(dlg.Login, dlg.Password);
+                        try
+                        {
+                            await s.Api.CreateUser(token, dlg.Login, dlg.Password);
 
-                        Mouse.OverrideCursor = save_cursor;
-                        this.Login = dlg.Login;
-                        this.Password = dlg.Password;
-                        this.DialogResult = true;
-                    }
-                    catch (Exception ex)
-                    {
-                        Mouse.OverrideCursor = save_cursor;
+                            Dispatcher.Invoke(() =>
+                            {
+                                Mouse.OverrideCursor = save_cursor;
+                                this.Login = dlg.Login;
+                                this.Password = dlg.Password;
+                                this.DialogResult = true;
+                            });
+                        }
+                        catch (Exception ex)
+                        {
+                            Dispatcher.Invoke(() =>
+                            {
+                                Mouse.OverrideCursor = save_cursor;
 
-                        MessageBox.Show(
-                            this,
-                            UIUtils.GetErrorMessage(ex),
-                            this.Title,
-                            MessageBoxButton.OK,
-                            MessageBoxImage.Error);
+                                MessageBox.Show(
+                                    this,
+                                    UIUtils.GetErrorMessage(ex),
+                                    this.Title,
+                                    MessageBoxButton.OK,
+                                    MessageBoxImage.Error);
+                            });
+                        }
                     }
-                }
+                });
             }
         }
     }

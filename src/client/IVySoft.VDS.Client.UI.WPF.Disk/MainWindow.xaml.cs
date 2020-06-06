@@ -32,37 +32,45 @@ namespace IVySoft.VDS.Client.UI.WPF.Disk
             InitializeComponent();
         }
 
-        private async void Window_Loaded(object sender, RoutedEventArgs e)
+        private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             this.factory_ = new FileListFactory();
             this.LeftPanel.DataContext = new Logic.Files.FileListState(this.factory_);
             this.RightPanel.DataContext = new Logic.Files.FileListState(this.factory_);
 
-            for (; ; )
-            {
-                var dlg = new LoginWindow();
-                dlg.Owner = this;
-                if (dlg.ShowDialog() != true)
-                {
-                    this.Close();
-                    return;
-                }
+            this.Login();
+        }
 
+        private void Login()
+        {
+            var dlg = new LoginWindow();
+            dlg.Owner = this;
+            if (dlg.ShowDialog() != true)
+            {
+                this.Close();
+                return;
+            }
+            ProgressWindow.Run(
+                "User login",
+                this, async token =>
+            {
                 using (var s = new VdsService())
                 {
                     try
                     {
-                        this.user_ = await s.Api.Login(dlg.Login, dlg.Password);
-                        this.OnGetChannels(await s.Api.GetChannels(this.user_));
+                        this.user_ = await s.Api.Login(token, dlg.Login, dlg.Password);
+                        this.OnGetChannels(await s.Api.GetChannels(token, this.user_));
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show(this, UIUtils.GetErrorMessage(ex), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
-                        continue;
+                        Dispatcher.Invoke(() =>
+                        {
+                            MessageBox.Show(this, UIUtils.GetErrorMessage(ex), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+                            this.Login();
+                        });
                     }
                 }
-                break;
-            }
+            });
         }
 
         private void OnGetChannels(Api.Channel[] result)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Threading;
 
 namespace IVySoft.VDS.Client.UI.Logic.Files
 {
@@ -24,17 +25,20 @@ namespace IVySoft.VDS.Client.UI.Logic.Files
                 {
                     var files = LoadFiles(value).ToList();
                     this.path_ = value;
-                    this.Files.Clear();
 
-                    foreach (var file in files)
-                    {
-                        this.Files.Add(file);
-                    }
+                    CollectionUtils.Update(
+                        this.Files,
+                        files,
+                        (x, y) => x.FullName == y.FullName,
+                        (x, y) => ((LocalSystemFileListItem)x).Update(y),
+                        (x) => x);
+
+                    this.Files.Clear();
                 }
             }
         }
 
-        private IEnumerable<IFileListItem> LoadFiles(string value)
+        private IEnumerable<LocalSystemFileListItem> LoadFiles(string value)
         {
             foreach(var dir in Directory.GetDirectories(value))
             {
@@ -49,6 +53,20 @@ namespace IVySoft.VDS.Client.UI.Logic.Files
         public bool TryParsePath(string path)
         {
             return (System.IO.Path.GetPathRoot(this.path_) == System.IO.Path.GetPathRoot(path));
+        }
+
+        public async System.Threading.Tasks.Task Refresh(CancellationToken token)
+        {
+            var files = LoadFiles(this.path_).ToList();
+
+            CollectionUtils.Update(
+                this.Files,
+                files,
+                (x, y) => x.FullName == y.FullName,
+                (x, y) => ((LocalSystemFileListItem)x).Update(y),
+                (x) => x);
+
+            this.Files.Clear();
         }
 
         public ObservableCollection<IFileListItem> Files { get; } = new ObservableCollection<IFileListItem>();
