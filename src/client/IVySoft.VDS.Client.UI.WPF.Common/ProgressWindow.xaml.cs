@@ -93,7 +93,7 @@ namespace IVySoft.VDS.Client.UI.WPF.Common
 
             if (!task.Wait(TimeSpan.FromSeconds(10)))
             {
-                System.Windows.Application.Current.Dispatcher.Invoke(()=>
+                System.Windows.Application.Current.Dispatcher.BeginInvoke(()=>
                 {
                     var dlg = new ProgressWindow();
                     dlg.Owner = parent;

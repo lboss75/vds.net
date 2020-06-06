@@ -17,7 +17,7 @@
         </Grid.RowDefinitions>
         <StackPanel>
             <ToolBar ToolBarTray.IsLocked="True" >
-                <ComboBox x:Name="CurrentSource" ItemsSource="{Binding Sources}" SelectedItem="{Binding CurrentSource}">
+                <ComboBox x:Name="CurrentSource" ItemsSource="{Binding Sources}" SelectedItem="{Binding CurrentSource}" SelectionChanged="CurrentSource_SelectionChanged">
                     <ComboBox.ToolTip>Channel</ComboBox.ToolTip>
                 </ComboBox>
                 <Button>Copy</Button>
@@ -27,6 +27,8 @@
                 <Button>Delete</Button>
                 <Separator />
                 <Button>Create Folder</Button>
+                <Separator/>
+                <Button Click="RefreshBtn_Click">Refresh</Button>
             </ToolBar>
             <TextBox x:Name="CurrentPath" Text="{Binding Path}">
                 <TextBox.ToolTip>Current Path</TextBox.ToolTip>

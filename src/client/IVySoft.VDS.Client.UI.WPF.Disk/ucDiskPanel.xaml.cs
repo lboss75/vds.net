@@ -1,4 +1,5 @@
 ﻿using IVySoft.VDS.Client.UI.Logic.Files;
+using IVySoft.VDS.Client.UI.WPF.Common;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -38,7 +39,7 @@ namespace IVySoft.VDS.Client.UI.WPF.Disk
 
         private void CurrentSource_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-
+            this.Refresh();
         }
 
         private void FileListView_MouseDoubleClick(object sender, MouseButtonEventArgs e)
@@ -49,8 +50,20 @@ namespace IVySoft.VDS.Client.UI.WPF.Disk
                 if (item.IsFolder)
                 {
                     this.DataContext.Path = item.FullName;
+                    this.Refresh();
                 }
             }
+        }
+
+        private void RefreshBtn_Click(object sender, RoutedEventArgs e)
+        {
+            this.Refresh();
+        }
+
+        private void Refresh()
+        {
+            var context = this.DataContext;
+            ProgressWindow.Run("Update " + context.Path, Window.GetWindow(this), token => context.Refresh(token, x => Dispatcher.Invoke(x)));
         }
     }
 }

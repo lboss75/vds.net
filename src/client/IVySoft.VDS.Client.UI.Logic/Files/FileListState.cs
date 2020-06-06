@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace IVySoft.VDS.Client.UI.Logic.Files
 {
@@ -44,6 +46,15 @@ namespace IVySoft.VDS.Client.UI.Logic.Files
                 }
             }
          }
+
+        public async Task Refresh(CancellationToken token, Action<Action> dispatchAction)
+        {
+            if(null != this.fileListProvider_)
+            {
+                await this.fileListProvider_.Refresh(token, dispatchAction);
+            }
+        }
+
         public string Path
         {
             get => this.fileListProvider_?.Path;

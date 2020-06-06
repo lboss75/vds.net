@@ -63,7 +63,7 @@ namespace IVySoft.VDS.Client.UI.WPF.Disk
                     }
                     catch (Exception ex)
                     {
-                        Dispatcher.Invoke(() =>
+                        Application.Current.Dispatcher.Invoke(() =>
                         {
                             MessageBox.Show(this, UIUtils.GetErrorMessage(ex), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
                             this.Login();

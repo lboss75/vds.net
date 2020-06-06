@@ -29,7 +29,7 @@ namespace IVySoft.VDS.Client.UI.Logic.Files
             return this.files_.ContainsKey(path);
         }
 
-        internal async System.Threading.Tasks.Task UpdateFiles(System.Threading.CancellationToken token)
+        internal async System.Threading.Tasks.Task UpdateFiles(System.Threading.CancellationToken token, Action<Action> dispatchAction)
         {
             using (var s = new VdsService())
             {
@@ -118,6 +118,11 @@ namespace IVySoft.VDS.Client.UI.Logic.Files
         public IFileListProvider CreateProvider()
         {
             return new VdsChannelListProvider(this);
+        }
+
+        public override string ToString()
+        {
+            return this.channel_.Name;
         }
     }
 }

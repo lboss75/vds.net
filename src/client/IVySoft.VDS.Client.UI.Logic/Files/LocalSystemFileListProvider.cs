@@ -55,18 +55,16 @@ namespace IVySoft.VDS.Client.UI.Logic.Files
             return (System.IO.Path.GetPathRoot(this.path_) == System.IO.Path.GetPathRoot(path));
         }
 
-        public async System.Threading.Tasks.Task Refresh(CancellationToken token)
+        public async System.Threading.Tasks.Task Refresh(CancellationToken token, Action<Action> dispatchAction)
         {
             var files = LoadFiles(this.path_).ToList();
 
-            CollectionUtils.Update(
-                this.Files,
-                files,
-                (x, y) => x.FullName == y.FullName,
-                (x, y) => ((LocalSystemFileListItem)x).Update(y),
-                (x) => x);
-
-            this.Files.Clear();
+            dispatchAction(() => CollectionUtils.Update(
+                    this.Files,
+                    files,
+                    (x, y) => x.FullName == y.FullName,
+                    (x, y) => ((LocalSystemFileListItem)x).Update(y),
+                    (x) => x));
         }
 
         public ObservableCollection<IFileListItem> Files { get; } = new ObservableCollection<IFileListItem>();

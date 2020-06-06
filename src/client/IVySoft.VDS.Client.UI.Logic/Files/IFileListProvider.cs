@@ -11,6 +11,6 @@ namespace IVySoft.VDS.Client.UI.Logic.Files
         bool TryParsePath(string path);
         ObservableCollection<IFileListItem> Files { get; }
 
-        System.Threading.Tasks.Task Refresh(System.Threading.CancellationToken token);
+        System.Threading.Tasks.Task Refresh(System.Threading.CancellationToken token, Action<Action> dispatchAction);
     }
 }

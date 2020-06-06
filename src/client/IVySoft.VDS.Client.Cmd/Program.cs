@@ -164,9 +164,10 @@ namespace IVySoft.VDS.Client.Cmd
                             }
                         }
 
-                        if (to_upload.Count > 0)
+                        while(to_upload.Count > 0)
                         {
-                            api.UploadFiles(source.Token, channel, opts.Comment, to_upload.ToArray()).Wait();
+                            api.UploadFiles(source.Token, channel, opts.Comment, to_upload.Take(100).ToArray()).Wait();
+                            to_upload.RemoveRange(0, 100);
                         }
                     }
 
