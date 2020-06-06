@@ -163,23 +163,29 @@ namespace IVySoft.VDS.Client.UI.WPF.Wallet
                 this.free_size_ = free_size;
 
                 var new_value = (reserved_size >= free_size) ? 100 : (reserved_size * 100 / free_size);
-                if (new_value != AllocatedSpace.Value)
+                Dispatcher.Invoke(() =>
                 {
-                    AllocatedSpace.Value = new_value;
-                }
-                UsedSpace.Value = (used_size >= reserved_size) ? 100 : (used_size * 100 / reserved_size);
+                    if (new_value != AllocatedSpace.Value)
+                    {
+                        AllocatedSpace.Value = new_value;
+                    }
+                    UsedSpace.Value = (used_size >= reserved_size) ? 100 : (used_size * 100 / reserved_size);
 
-                AllocatedSpaceLabel.Content = string.Format(
-                    UIResources.AllocatedSpaceLabelFormat,
-                    HumanReadableFormat.GetBytesReadable(reserved_size),
-                    HumanReadableFormat.GetBytesReadable(free_size));
-                UsedSpaceLabel.Content = HumanReadableFormat.GetBytesReadable(used_size);
+                    AllocatedSpaceLabel.Content = string.Format(
+                        UIResources.AllocatedSpaceLabelFormat,
+                        HumanReadableFormat.GetBytesReadable(reserved_size),
+                        HumanReadableFormat.GetBytesReadable(free_size));
+                    UsedSpaceLabel.Content = HumanReadableFormat.GetBytesReadable(used_size);
+                });
             }
             catch (Exception ex)
             {
-                this.timer_.Stop();
-                MessageBox.Show(this, UIUtils.GetErrorMessage(ex), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
-                this.timer_.Start();
+                Dispatcher.Invoke(() =>
+                {
+                    this.timer_.Stop();
+                    MessageBox.Show(this, UIUtils.GetErrorMessage(ex), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+                    this.timer_.Start();
+                });
             }
         }
 

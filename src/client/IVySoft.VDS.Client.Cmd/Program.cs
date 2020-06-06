@@ -23,11 +23,30 @@ namespace IVySoft.VDS.Client.Cmd
                 .MapResult(
                   (CreateUserOptions opts) => RunAddAndReturnExitCode(opts),
                   (ChannelsOptions opts) => RunAddAndReturnExitCode(opts),
+                  (CreateChannelOptions opts) => RunAddAndReturnExitCode(opts),
                   (SyncOptions opts) => RunAddAndReturnExitCode(opts),
                   (AllocateStorageOptions opts) => RunAddAndReturnExitCode(opts),
                   (GetStorageOptions opts) => RunAddAndReturnExitCode(opts),
                   errs => 1);
 
+        }
+
+        private static int RunAddAndReturnExitCode(CreateChannelOptions opts)
+        {
+            using (var source = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(opts.Timeout)))
+            {
+                using (VdsApi api = new VdsApi(new VdsApiConfig
+                {
+                    ServiceUri = "ws://" + opts.Server + "/api/ws"
+                }))
+                {
+                    var user = api.Login(source.Token, opts.Login, opts.Password).Result;
+                    var channel = api.create_channel(source.Token, user, opts.ChannelType, opts.ChannelName).Result;
+                    Console.WriteLine(channel.Id);
+                }
+            }
+
+            return 0;
         }
 
         private static int RunAddAndReturnExitCode(GetStorageOptions opts)
