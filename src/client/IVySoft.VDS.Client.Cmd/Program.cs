@@ -159,6 +159,7 @@ namespace IVySoft.VDS.Client.Cmd
                         {
                             if (IsNewFile(api, f, storage_files))
                             {
+                                f.ProgressCallback = (x => { Console.Write("\r" + f.Name + " " + x + "%"); return true; });
                                 to_upload.Add(f);
                             }
                         }
