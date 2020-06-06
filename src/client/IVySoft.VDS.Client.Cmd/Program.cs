@@ -19,7 +19,8 @@ namespace IVySoft.VDS.Client.Cmd
                 ChannelsOptions,
                 SyncOptions,
                 AllocateStorageOptions,
-                GetStorageOptions>(args)
+                GetStorageOptions,
+                CreateChannelOptions>(args)
                 .MapResult(
                   (CreateUserOptions opts) => RunAddAndReturnExitCode(opts),
                   (ChannelsOptions opts) => RunAddAndReturnExitCode(opts),
