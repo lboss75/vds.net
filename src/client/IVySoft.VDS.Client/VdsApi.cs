@@ -15,6 +15,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace IVySoft.VDS.Client
@@ -67,6 +68,15 @@ namespace IVySoft.VDS.Client
                     "broadcast",
                     Convert.ToBase64String(ms.ToArray()));
             }
+        }
+
+        public async Task<SyncStatistic[]> GetDistributionMap(CancellationToken token, byte[][] hashes)
+        {
+            var client = await this.get_client(token);
+            return await client.call<SyncStatistic[]>(
+                token,
+                "distribution_map",
+                new object[] { hashes.Select(x => Convert.ToBase64String(x)).ToArray() });
         }
 
         public async Task<ServerStatistic> GetStatistics(System.Threading.CancellationToken token)
@@ -160,8 +170,9 @@ namespace IVySoft.VDS.Client
 
         private async Task<byte[]> Download(System.Threading.CancellationToken token, FileBlock file_block)
         {
-            var replicas = await this.client_.call<LookingBlockResponse>(token, "looking_block", file_block.BlockId);
-            var result = await this.client_.call<string>(token, "download", replicas.replicas);
+            var client = await this.get_client(token);
+            var replicas = await client.call<LookingBlockResponse>(token, "looking_block", file_block.BlockId);
+            var result = await client.call<string>(token, "download", replicas.replicas);
             return decrypt_file_block(file_block, Convert.FromBase64String(result));
         }
 

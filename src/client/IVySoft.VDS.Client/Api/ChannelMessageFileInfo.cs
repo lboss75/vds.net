@@ -10,6 +10,8 @@ namespace IVySoft.VDS.Client.Api
         private readonly FileInfo data_;
 
         public byte[] Id { get => this.data_.Id; }
+        public string IdStr { get => Convert.ToBase64String(this.data_.Id); }
+
         public string Name { get => this.data_.Name; }
         public string MimeType { get => this.data_.MimeType; }
         public long Size { get => this.data_.Size; }

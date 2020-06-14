@@ -191,7 +191,8 @@ namespace IVySoft.VDS.Client.UI.WPF.Wallet
 
         private async void AllocatedSpace_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            ProgressWindow.Run("Allocate space", this, token => AllocateStorage(token, !this.AllocatedSpaceDragStarted_));
+            var new_percent = AllocatedSpace.Value;
+            ProgressWindow.Run("Allocate space", this, token => AllocateStorage(token, new_percent, !this.AllocatedSpaceDragStarted_));
         }
 
         private void AllocatedSpace_DragStarted(object sender, System.Windows.Controls.Primitives.DragStartedEventArgs e)
@@ -202,10 +203,11 @@ namespace IVySoft.VDS.Client.UI.WPF.Wallet
         private void AllocatedSpace_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
         {
             this.AllocatedSpaceDragStarted_ = false;
-            ProgressWindow.Run("Allocate space", this, token => this.AllocateStorage(token, true));
+            var new_percent = AllocatedSpace.Value;
+            ProgressWindow.Run("Allocate space", this, token => this.AllocateStorage(token, new_percent, true));
         }
 
-        private async Task AllocateStorage(CancellationToken token, bool complete)
+        private async Task AllocateStorage(CancellationToken token, double new_percent, bool complete)
         {
             try
             {
@@ -228,13 +230,13 @@ namespace IVySoft.VDS.Client.UI.WPF.Wallet
                                 this.user_.Id);
                             System.IO.Directory.CreateDirectory(folder);
 
-                            reserved_size = (long)(AllocatedSpace.Value * this.free_size_ / 100);
+                            reserved_size = (long)(new_percent * this.free_size_ / 100);
                             await s.Api.AllocateStorage(token, this.user_, folder, reserved_size, "share");
                         }
                         else
                         {
                             this.free_size_ = devices[0].free_size;
-                            reserved_size = (long)(AllocatedSpace.Value * this.free_size_ / 100);
+                            reserved_size = (long)(new_percent * this.free_size_ / 100);
                             if (complete)
                             {
                                 await s.Api.AllocateStorage(token, this.user_, devices[0].local_path, reserved_size, devices[0].usage_type);
@@ -244,13 +246,15 @@ namespace IVySoft.VDS.Client.UI.WPF.Wallet
                 }
                 else
                 {
-                    reserved_size = (long)(AllocatedSpace.Value * this.free_size_ / 100);
+                    reserved_size = (long)(new_percent * this.free_size_ / 100);
                 }
 
-                AllocatedSpaceLabel.Content = string.Format(
-                    UIResources.AllocatedSpaceLabelFormat,
-                    HumanReadableFormat.GetBytesReadable(reserved_size),
-                    HumanReadableFormat.GetBytesReadable(this.free_size_));
+                Dispatcher.Invoke(() => {
+                    AllocatedSpaceLabel.Content = string.Format(
+                        UIResources.AllocatedSpaceLabelFormat,
+                        HumanReadableFormat.GetBytesReadable(reserved_size),
+                        HumanReadableFormat.GetBytesReadable(this.free_size_));
+                });
             }
             catch (Exception ex)
             {

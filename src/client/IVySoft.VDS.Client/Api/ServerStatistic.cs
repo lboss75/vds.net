@@ -9,7 +9,6 @@ namespace IVySoft.VDS.Client.Api
         public int db_queue_length { get; set; }
         public string current_user_folder { get; set; }
         public string local_machine_folder { get; set; }
-        public SyncStatistic sync { get; set; }
         public RouteStatistic route { get; set; }
         public SessionStatistic session { get; set; }
 

@@ -32,8 +32,13 @@
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
                                             <StackPanel Orientation="Horizontal">
-                                                <TextBlock>
+                                                <TextBlock Tag="{Binding .}">
                                                     <Hyperlink Click="FileHyperlink_Click" Tag="{Binding .}">
+                                                        <Hyperlink.ContextMenu>
+                                                            <ContextMenu>
+                                                                <MenuItem Click="DistributionMap_Click" Header="Show distribution map" />
+                                                            </ContextMenu>
+                                                        </Hyperlink.ContextMenu>
                                                         <TextBlock Text="{Binding Name}"/>
                                                     </Hyperlink>
                                             </TextBlock>

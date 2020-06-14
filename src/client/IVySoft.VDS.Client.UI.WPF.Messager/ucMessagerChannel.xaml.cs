@@ -153,5 +153,23 @@ namespace IVySoft.VDS.Client.UI.WPF
             MessageEdit.Text = string.Empty;
             FilesList.Children.Clear();
         }
+
+        private void DistributionMap_Click(object sender, RoutedEventArgs e)
+        {
+            var menu = (ContextMenu)((MenuItem)sender).Parent;
+            
+            var fb = (Logic.Model.ChannelMessageFileInfo)((TextBlock)menu.PlacementTarget).Tag;
+            if(null != fb && null != fb.Info)
+            {
+                DistributionMapWindow wnd = new DistributionMapWindow();
+                wnd.DataContext = fb.Info;
+                wnd.Show();
+            }
+        }
+
+        private void DistributionMap_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+        {
+            e.CanExecute = true;
+        }
     }
 }
