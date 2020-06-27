@@ -28,10 +28,20 @@ namespace IVySoft.VDS.Client.UI.WPF
 
         private void FileHyperlink_Click(object sender, RoutedEventArgs e)
         {
-            var target_folder = System.IO.Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                "Downloads");
             var fb = (Logic.Model.ChannelMessageFileInfo)((Hyperlink)e.OriginalSource).Tag;
+
+            string file_path;
+            if(VdsService.DownloadCache.TryGetFile(fb.Info.Id, out file_path))
+            {
+                new System.Diagnostics.Process
+                {
+                    StartInfo = new System.Diagnostics.ProcessStartInfo(file_path)
+                    {
+                        UseShellExecute = true
+                    }
+                }.Start();
+                return;
+            }
 
             ProgressWindow.Run(
                 "File download",
@@ -41,7 +51,7 @@ namespace IVySoft.VDS.Client.UI.WPF
                 {
                     try
                     {
-                        var f = await s.Download(token, fb.Info, target_folder);
+                        var f = await s.Download(token, fb.Info);
                         new System.Diagnostics.Process
                         {
                             StartInfo = new System.Diagnostics.ProcessStartInfo(f)

@@ -32,7 +32,7 @@ namespace IVySoft.VDS.Client.Cmd
 
         }
 
-        private static int RunAddAndReturnExitCode(CreateChannelOptions opts)
+        public static int RunAddAndReturnExitCode(CreateChannelOptions opts)
         {
             using (var source = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(opts.Timeout)))
             {
@@ -167,7 +167,7 @@ namespace IVySoft.VDS.Client.Cmd
                         while(to_upload.Count > 0)
                         {
                             api.UploadFiles(source.Token, channel, opts.Comment, to_upload.Take(100).ToArray()).Wait();
-                            to_upload.RemoveRange(0, 100);
+                            to_upload.RemoveRange(0, Math.Min(to_upload.Count, 100));
                         }
                     }
 

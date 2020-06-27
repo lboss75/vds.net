@@ -1,7 +1,9 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace IVySoft.VDS.Client.Cmd.Tests
 {
@@ -10,25 +12,42 @@ namespace IVySoft.VDS.Client.Cmd.Tests
         private const string login = "test@test.ru";
         private const string password = "123qwe";
 
+        private readonly ITestOutputHelper output;
+
+        public SimpleTests(ITestOutputHelper output)
+        {
+            this.output = output;
+        }
+        private void WriteLine(string line)
+        {
+            this.output.WriteLine(line);
+            Debug.WriteLine("Test: " + line);
+        }
         [Fact]
         public void AllocateStorageTest()
         {
             if (Directory.Exists(VdsProcess.RootFolder))
             {
+                this.WriteLine($"Delete folder {VdsProcess.RootFolder}");
                 Directory.Delete(VdsProcess.RootFolder, true);
             }
 
+            this.WriteLine($"Init root in {VdsProcess.RootFolder}");
             Assert.Equal(0, VdsProcess.InitRoot(login, password));
 
             using (var servers = new VdsProcessSet(2))
             {
+                this.WriteLine($"Starting servers");
                 servers.start();
                 System.Threading.Thread.Sleep(10000);
+                this.WriteLine($"Waiting sync");
                 servers.waiting_sync();
 
                 //servers.create_user(4, login, password);
 
-                servers.allocate_storage(login, password, 10);
+                this.WriteLine($"Allocate storage");
+                servers.allocate_storage(login, password, "1G");
+                this.WriteLine($"Waiting sync");
                 servers.waiting_sync();
 
                 var source_folder = Path.Combine(VdsProcess.RootFolder, "Original");
@@ -39,34 +58,44 @@ namespace IVySoft.VDS.Client.Cmd.Tests
                 Directory.CreateDirectory(dest_folder_local);
                 Directory.CreateDirectory(dest_folder_remote);
 
-                const int file_count = 2;
+                this.WriteLine($"Generate random files");
+                const int file_count = 10;
                 var rnd = new Random();
                 for (int i = 0; i < file_count; ++i)
                 {
                     GenerateRandomFile(rnd, Path.Combine(source_folder, i.ToString()));
                 }
 
+                this.WriteLine($"Create channel");
+                Assert.Equal(0 , servers.create_channel(1, login, password, IVySoft.VDS.Client.Api.ChannelTypes.file_channel, "test"));
+
                 string channel_id = null;
+                this.WriteLine($"Looking channels");
                 foreach (var channel in servers.GetChannels(login, password, 1))
                 {
                     channel_id = channel.Id;
                     if (!string.IsNullOrEmpty(channel_id))
                     {
+                        this.WriteLine($"Found channel {channel_id}");
                         break;
                     }
                 }
 
                 Assert.True(!string.IsNullOrEmpty(channel_id));
 
+                this.WriteLine($"Sync local files");
                 servers.sync_files(login, password, channel_id, 1, source_folder);
                 servers.sync_files(login, password, channel_id, 1, dest_folder_local);
                 for (int i = 0; i < file_count; ++i)
                 {
                     CompareFile(Path.Combine(source_folder, i.ToString()), Path.Combine(dest_folder_local, i.ToString()));
                 }
+                this.WriteLine($"Waiting sync");
                 servers.waiting_sync();
 
+                this.WriteLine($"Sync remote files");
                 servers.sync_files(login, password, channel_id, 0, dest_folder_remote);
+                this.WriteLine($"Compare files");
                 for (int i = 0; i < file_count; ++i)
                 {
                     CompareFile(Path.Combine(source_folder, i.ToString()), Path.Combine(dest_folder_remote, i.ToString()));

@@ -1,5 +1,6 @@
 ﻿using IVySoft.VDS.Client.Transactions.Data;
 using System;
+using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
@@ -13,6 +14,7 @@ namespace IVySoft.VDS.Client.UI.Logic
 
         public VdsApi Api => this.api_;
         public Action<Exception> ErrorHandler { get; set; }
+        public static FilesCache DownloadCache { get; } = new FilesCache(Path.Combine(Path.GetTempPath(), "VDS", "Cache"));
 
         public VdsService()
         {
@@ -30,7 +32,7 @@ namespace IVySoft.VDS.Client.UI.Logic
                 this.api_ = null;
             }
         }
-        private static byte[] CalculateHash(string file_name)
+        internal static byte[] CalculateHash(string file_name)
         {
             using (var f = System.IO.File.OpenRead(file_name))
             {
@@ -40,20 +42,8 @@ namespace IVySoft.VDS.Client.UI.Logic
                 }
             }
         }
-        public async Task<string> Download(System.Threading.CancellationToken token, Api.ChannelMessageFileInfo file_info, string target_folder)
+        public async Task<string> Download(System.Threading.CancellationToken token, Api.ChannelMessageFileInfo file_info)
         {
-            foreach (var f in System.IO.Directory.GetFiles(target_folder,
-                System.IO.Path.GetFileNameWithoutExtension(file_info.Name)
-                + "*"
-                + System.IO.Path.GetExtension(file_info.Name)))
-            {
-                var h = CalculateHash(f);
-                if (h.SequenceEqual(file_info.Id))
-                {
-                    return f;
-                }
-            }
-
             var tmp = System.IO.Path.GetTempFileName();
             try
             {
@@ -74,14 +64,18 @@ namespace IVySoft.VDS.Client.UI.Logic
 
             for(int i = 0; i < int.MaxValue; ++i)
             {
-                var file_name = System.IO.Path.Combine(target_folder,
-                    System.IO.Path.GetFileNameWithoutExtension(file_info.Name)
-                    + ((0 == i) ? string.Empty : $"({i})")
-                    + System.IO.Path.GetExtension(file_info.Name));
-                if (!System.IO.File.Exists(file_name))
+                lock (DownloadCache)
                 {
-                    System.IO.File.Copy(tmp, file_name, true);
-                    return file_name;
+                    var file_name = System.IO.Path.Combine(DownloadCache.Folder,
+                        System.IO.Path.GetFileNameWithoutExtension(file_info.Name)
+                        + ((0 == i) ? string.Empty : $"({i})")
+                        + System.IO.Path.GetExtension(file_info.Name));
+                    if (!System.IO.File.Exists(file_name))
+                    {
+                        System.IO.File.Copy(tmp, file_name, true);
+                        DownloadCache.Add(file_info.Id, file_name);
+                        return file_name;
+                    }
                 }
             }
 

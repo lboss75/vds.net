@@ -34,7 +34,7 @@
         </ListView>
         <GridSplitter Grid.Column="1" Width="3" HorizontalAlignment="Center" VerticalAlignment="Stretch"/>
         <Grid Grid.Column="2" x:Name="ChannelBody">
-            <TextBlock>Выберите канал</TextBlock>
+                <TextBlock>Select channel</TextBlock>
         </Grid>
     </Grid>
     </DockPanel>

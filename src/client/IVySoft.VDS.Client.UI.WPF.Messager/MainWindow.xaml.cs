@@ -113,7 +113,7 @@ namespace IVySoft.VDS.Client.UI.WPF
             {
                 var channel = this.DataContext.SelectedChannel;
                 ProgressWindow.Run(
-                    "Get channels list",
+                    "Get channel's messages",
                     this, async token =>
                 {
                     using (var s = new VdsService())

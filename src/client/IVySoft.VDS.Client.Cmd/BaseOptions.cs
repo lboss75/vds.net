@@ -14,6 +14,6 @@ namespace IVySoft.VDS.Client.Cmd
         public string Server { get; set; }
 
         [Option("timeout", Required = false, Default = 60, HelpText = "Timeout for operations")]
-        public int Timeout { get; set; }
+        public int Timeout { get; set; } = 60;
     }
 }

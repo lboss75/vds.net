@@ -38,6 +38,17 @@ namespace IVySoft.VDS.Client.Cmd.Tests
                 Server = $"localhost:{8050 + server_index}"
             });
         }
+        internal int create_channel(int server_index, string login, string password, string channel_type, string channel_name)
+        {
+            return Program.RunAddAndReturnExitCode(new CreateChannelOptions
+            {
+                Login = login,
+                Password = password,
+                Server = $"localhost:{8050 + server_index}",
+                ChannelType = channel_type,
+                ChannelName = channel_name
+            });
+        }
 
         internal void waiting_sync()
         {
@@ -48,6 +59,10 @@ namespace IVySoft.VDS.Client.Cmd.Tests
                 for (int i = 0; i < this.servers_.Length; ++i)
                 {
                     this.servers_[i].Sync($"localhost:{8050 + i}", items, ref bContinue);
+                    if(0 == i)
+                    {
+                        bContinue = false;
+                    }
                 }
 
                 if (!bContinue)
@@ -59,7 +74,7 @@ namespace IVySoft.VDS.Client.Cmd.Tests
             }
         }
 
-        public void allocate_storage(string login, string password, long size)
+        public void allocate_storage(string login, string password, string size)
         {
             for (int i = 0; i < this.servers_.Length; ++i)
             {
@@ -69,7 +84,8 @@ namespace IVySoft.VDS.Client.Cmd.Tests
                     Password = password,
                     Server = $"localhost:{8050 + i}",
                     DestinationPath = System.IO.Path.Combine(this.servers_[i].ServerRoot, "storage"),
-                    Length = size.ToString()
+                    Length = size
+
                 });
 
                 if (0 == code)
