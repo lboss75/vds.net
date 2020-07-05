@@ -14,7 +14,7 @@ namespace IVySoft.VDS.Client.UI.Logic
 
         public VdsApi Api => this.api_;
         public Action<Exception> ErrorHandler { get; set; }
-        public static FilesCache DownloadCache { get; } = new FilesCache(Path.Combine(Path.GetTempPath(), "VDS", "Cache"));
+        public static FilesCache DownloadCache { get; } = new FilesCache(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads", "VDS", "Cache"));
 
         public VdsService()
         {

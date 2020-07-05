@@ -93,5 +93,18 @@ namespace IVySoft.VDS.Client.UI.WPF.SmartHome
                 }
             });
         }
+
+        private void DistributionMap_Click(object sender, RoutedEventArgs e)
+        {
+            var menu = (ContextMenu)((MenuItem)sender).Parent;
+
+            var fb = ((ChannelImage)((StackPanel)menu.PlacementTarget).Tag).Item;
+            if (null != fb)
+            {
+                DistributionMapWindow wnd = new DistributionMapWindow();
+                wnd.DataContext = fb;
+                wnd.Show();
+            }
+        }
     }
 }

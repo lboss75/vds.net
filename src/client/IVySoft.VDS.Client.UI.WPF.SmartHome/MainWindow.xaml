@@ -36,7 +36,13 @@
                     <ListView ItemsSource="{Binding Images}">
                         <ListView.ItemTemplate>
                             <DataTemplate>
-                                <StackPanel>
+                                <StackPanel Tag="{Binding .}">
+                                    <StackPanel.ContextMenu>
+                                        <ContextMenu>
+                                            <MenuItem Click="DistributionMap_Click" Header="Show distribution map" />
+                                        </ContextMenu>
+                                    </StackPanel.ContextMenu>
+
                                     <MediaElement Source="{Binding ImageUrl}"  />
                                     <Label Content="{Binding ImageLabel}"/>
                                 </StackPanel>

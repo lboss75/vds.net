@@ -30,6 +30,8 @@ namespace IVySoft.VDS.Client.UI.WPF.SmartHome
 
         public DateTime TimePoint { get; set; }
 
+        public ChannelMessageFileInfo Item { get => this.item_; }
+
         public void StartDownload()
         {
             string cached;
